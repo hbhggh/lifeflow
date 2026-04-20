@@ -66,3 +66,30 @@ def _missing(obj, required, path):
     if gap:
         return [f'{path} missing keys: {sorted(gap)}']
     return []
+
+
+if __name__ == '__main__':
+    import json
+    import sys
+
+    if len(sys.argv) != 2:
+        sys.stderr.write('usage: validate_data.py <path/to/data.json>\n')
+        sys.exit(2)
+
+    try:
+        with open(sys.argv[1], encoding='utf-8') as f:
+            data = json.load(f)
+    except json.JSONDecodeError as e:
+        sys.stderr.write(f'JSON parse error: {e}\n')
+        sys.exit(3)
+    except OSError as e:
+        sys.stderr.write(f'file error: {e}\n')
+        sys.exit(4)
+
+    errors = validate(data)
+    if errors:
+        for err in errors:
+            print(f'ERROR: {err}')
+        sys.exit(1)
+    print('OK')
+    sys.exit(0)
