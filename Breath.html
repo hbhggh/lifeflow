@@ -1,0 +1,1082 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>life flow · Breath</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* light — warm paper */
+    --bg: #f7f6f3;
+    --surface: #fffefb;
+    --text: #1a1a1a;
+    --text-2: #555550;
+    --text-3: #8a8880;
+    --text-4: #b8b6ae;
+    --line: #e8e6df;
+    --line-2: #ededea;
+    --pos: #0e7a59;
+    --pos-fg: #0b6146;
+    --pos-bg: #d8ecde;
+    --neg: #c45a2a;
+    --neg-fg: #8a3612;
+    --neg-bg: #f7e2d2;
+    --neu-bg: #ececea;
+    --neu-fg: #5a5a55;
+    --track: #ececea;
+    --track-ghost: #f2f0ec;
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Inter, system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      /* dark — deep indigo-ink */
+      --bg: #0c0d10;
+      --surface: #111216;
+      --text: #f4f3ef;
+      --text-2: #b8b7b0;
+      --text-3: #7f7d76;
+      --text-4: #4e4d48;
+      --line: #22232a;
+      --line-2: #1a1b21;
+      --pos: #5dcaa5;
+      --pos-fg: #7ae0bd;
+      --pos-bg: rgba(93, 202, 165, 0.14);
+      --neg: #f08a5a;
+      --neg-fg: #f4a37e;
+      --neg-bg: rgba(240, 138, 90, 0.14);
+      --neu-bg: rgba(255, 255, 255, 0.06);
+      --neu-fg: #b8b7b0;
+      --track: rgba(255, 255, 255, 0.075);
+      --track-ghost: rgba(255, 255, 255, 0.035);
+      color-scheme: dark;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .tnum { font-variant-numeric: tabular-nums; }
+
+  .app {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px 20px 80px;
+  }
+  @media (min-width: 768px) { .app { padding: 40px 40px 120px; } }
+  @media (min-width: 1200px) { .app { padding: 56px 64px 160px; } }
+
+  /* ======================= */
+  /* Top bar — whisper       */
+  /* ======================= */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 36px;
+  }
+  @media (min-width: 768px) { .topbar { margin-bottom: 56px; } }
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-3);
+    letter-spacing: 0.01em;
+  }
+  .brand b {
+    color: var(--text);
+    font-weight: 500;
+  }
+  .topbar .meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+  }
+  .topbar .meta span + span { margin-left: 14px; padding-left: 14px; border-left: 1px solid var(--line); }
+  @media (max-width: 520px) { .topbar .meta .hide-sm { display: none; } }
+
+  /* ======================= */
+  /* Hero                    */
+  /* ======================= */
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (min-width: 560px) {
+    .hero {
+      grid-template-columns: 60% 40%;
+      gap: 0;
+      align-items: end;
+    }
+  }
+  @media (min-width: 768px) { .hero { padding-bottom: 56px; } }
+
+  .hero-main { position: relative; }
+  @media (min-width: 560px) {
+    .hero-main { padding-right: 40px; border-right: 1px solid var(--line); }
+    .hero-side { padding-left: 40px; }
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .eyebrow .sep { color: var(--text-4); margin: 0 8px; }
+
+  .hero-number {
+    position: relative;
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 20px;
+    line-height: 1;
+  }
+  .hero-number .n {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: clamp(72px, 18vw, 148px);
+    letter-spacing: -0.04em;
+    color: var(--text);
+    line-height: 0.9;
+    font-variant-numeric: tabular-nums;
+  }
+  .hero-number .unit {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--text-3);
+    margin-top: 16px;
+  }
+  .hero-number .delta-chip {
+    position: absolute;
+    top: -4px;
+    right: -54px;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    transform: translateX(100%);
+  }
+  .hero-number .delta-chip.pos { background: var(--pos-bg); color: var(--pos-fg); }
+  .hero-number .delta-chip.neg { background: var(--neg-bg); color: var(--neg-fg); }
+  .hero-number .delta-chip.neu { background: var(--neu-bg); color: var(--neu-fg); }
+
+  .hero-sub {
+    margin-top: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    font-weight: 500;
+    line-height: 1;
+  }
+  .badge.pos { background: var(--pos-bg); color: var(--pos-fg); }
+  .badge.neg { background: var(--neg-bg); color: var(--neg-fg); }
+  .badge.neu { background: var(--neu-bg); color: var(--neu-fg); }
+  .rank-text {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-3);
+  }
+  .rank-text b { color: var(--text); font-weight: 500; }
+
+  .hero-side {
+    padding-top: 8px;
+  }
+  @media (max-width: 559px) {
+    .hero-side { border-top: 1px solid var(--line); padding-top: 28px; }
+  }
+  .y-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .y-number {
+    margin-top: 14px;
+    font-family: var(--mono);
+    font-weight: 400;
+    font-size: 42px;
+    color: var(--text-2);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .y-number .u { font-size: 12px; color: var(--text-3); margin-left: 6px; }
+  .y-date {
+    margin-top: 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-4);
+  }
+
+  /* tiny histogram for "percentile" — ornamental but functional */
+  .percentile {
+    margin-top: 24px;
+  }
+  .percentile-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .percentile-label b { color: var(--text); font-weight: 500; }
+  .bins {
+    display: flex;
+    gap: 3px;
+    align-items: end;
+    height: 28px;
+  }
+  .bins i {
+    flex: 1;
+    background: var(--track);
+    border-radius: 1px;
+    min-height: 4px;
+  }
+  .bins i.active {
+    background: var(--text);
+  }
+
+  /* ======================= */
+  /* Hero-state demo strip   */
+  /* ======================= */
+  .statestrip {
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line-2);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+  }
+  .statestrip .label {
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-4);
+  }
+
+  /* ======================= */
+  /* Stats row               */
+  /* ======================= */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    margin-top: 32px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (min-width: 768px) { .stats { margin-top: 40px; padding-bottom: 56px; } }
+  .stat { padding: 0 20px; border-right: 1px solid var(--line); }
+  .stat:first-child { padding-left: 0; }
+  .stat:last-child { padding-right: 0; border-right: 0; }
+  .stat .label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .stat .val {
+    margin-top: 12px;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-family: var(--mono);
+    font-weight: 500;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat .val .big { font-size: clamp(26px, 5vw, 36px); letter-spacing: -0.02em; line-height: 1; }
+  .stat .val .small { font-size: 12px; color: var(--text-3); font-weight: 400; }
+
+  .stat .sublevel {
+    margin-top: 14px;
+    height: 2px;
+    background: var(--track);
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat .sublevel > i {
+    position: absolute; inset: 0 auto 0 0;
+    background: var(--text);
+    opacity: 0.9;
+  }
+  .stat .sublevel-caption {
+    margin-top: 8px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-4);
+    display: flex; justify-content: space-between;
+  }
+
+  .stat .streak-dots {
+    display: flex; gap: 4px; margin-top: 12px;
+  }
+  .stat .streak-dots i {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--text);
+  }
+  .stat .streak-dots i.ghost { background: var(--track); }
+
+  /* ======================= */
+  /* Section heading         */
+  /* ======================= */
+  .section {
+    padding-top: 40px;
+  }
+  @media (min-width: 768px) { .section { padding-top: 56px; } }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+  .section-title {
+    font-family: var(--sans);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .section-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.02em;
+  }
+
+  .belowhero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
+  }
+  @media (min-width: 1000px) {
+    .belowhero {
+      /* entries (primary) on the left, projects on the right */
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      column-gap: 64px;
+    }
+  }
+
+  /* ======================= */
+  /* Focus-window bar        */
+  /* ======================= */
+  .focus-bar {
+    margin-top: 32px;
+    padding: 18px 0 22px;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (min-width: 768px) { .focus-bar { margin-top: 40px; padding-bottom: 32px; } }
+  .focus-bar .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .focus-bar .title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .focus-bar .title .live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--pos);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--pos) 22%, transparent);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  .focus-bar .title .live-dot.ended { background: var(--text-4); box-shadow: none; animation: none; }
+  .focus-bar .title .live-dot.pre { background: var(--text-4); box-shadow: none; animation: none; }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 3px color-mix(in oklch, var(--pos) 22%, transparent); }
+    50% { box-shadow: 0 0 0 5px color-mix(in oklch, var(--pos) 8%, transparent); }
+  }
+  .focus-bar .remaining {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .focus-bar .remaining b {
+    color: var(--text);
+    font-weight: 500;
+  }
+  .focus-bar .remaining .pct {
+    color: var(--text-3);
+    margin-left: 8px;
+    padding-left: 8px;
+    border-left: 1px solid var(--line);
+  }
+  .focus-track {
+    position: relative;
+    height: 6px;
+    background: var(--track);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .focus-track .used {
+    position: absolute; inset: 0 auto 0 0;
+    background: var(--text);
+    opacity: 0.88;
+  }
+  .focus-track .used.ended {
+    background: var(--text-4);
+  }
+  .focus-track .now {
+    position: absolute; top: -3px; bottom: -3px;
+    width: 2px;
+    background: var(--pos);
+    border-radius: 1px;
+  }
+  .focus-track .now.ended, .focus-track .now.pre { display: none; }
+  .focus-axis {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-4);
+    letter-spacing: 0.04em;
+  }
+  .focus-axis .mid { color: var(--text-3); }
+
+  /* ======================= */
+  /* Projects                */
+  /* ======================= */
+  .projects {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  @media (min-width: 768px) { .projects { gap: 18px; } }
+
+  /* collapsible project */
+  .project {
+    border-top: 1px solid var(--line-2);
+    padding-top: 14px;
+  }
+  .project:first-child { border-top: 0; padding-top: 0; }
+
+  .project-summary {
+    all: unset;
+    display: block;
+    cursor: pointer;
+    outline: none;
+  }
+  .project-summary:focus-visible .name { text-decoration: underline; text-underline-offset: 3px; }
+
+  .project-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .project-head .chev {
+    width: 14px; height: 14px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--text-4);
+    transition: transform 0.18s ease;
+    font-family: var(--mono);
+    font-size: 10px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .project.open .project-head .chev { transform: rotate(90deg); color: var(--text-3); }
+
+  .project-detail {
+    display: none;
+    padding: 6px 0 2px 24px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--text-3);
+    line-height: 1.6;
+  }
+  .project.open .project-detail { display: block; }
+  .project-detail .row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+  }
+  .project-detail .row .k { color: var(--text-4); }
+  .project-detail .row .v { color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .project-detail .row .v b { color: var(--text); font-weight: 500; }
+
+  .project {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .project-row1 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .project-row1 .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--c);
+    flex-shrink: 0;
+  }
+  .project-row1 .name {
+    flex: 1;
+    min-width: 0;
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.005em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .project-row1 .pct {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .project-row1 .delta {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 7px;
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    background: var(--pos-bg);
+    color: var(--pos-fg);
+  }
+  .project-row1 .delta.zero { visibility: hidden; }
+
+  .track {
+    position: relative;
+    height: 2px;
+    background: var(--track);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .track .fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: var(--c);
+  }
+  .track .inc {
+    position: absolute;
+    top: 0; bottom: 0;
+    background: color-mix(in oklch, var(--c) 38%, transparent);
+  }
+  /* 0%-project dashed dotted track (not "broken" — it says 'not yet') */
+  .track.zero {
+    background: transparent;
+    border-top: 1px dashed var(--line);
+    border-radius: 0;
+    height: 2px;
+  }
+  .track.zero .fill, .track.zero .inc { display: none; }
+
+  .project-row3 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+  }
+  .project-row3 .cat {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-4);
+  }
+  .project-row3 .today-inc b {
+    color: var(--text-2);
+    font-weight: 500;
+  }
+
+  /* ======================= */
+  /* Entries                 */
+  /* ======================= */
+  .entries {
+    display: flex;
+    flex-direction: column;
+  }
+  .entry {
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    gap: 16px;
+    padding: 18px 0;
+    align-items: start;
+    border-bottom: 1px solid var(--line-2);
+  }
+  .entry:first-child { padding-top: 0; }
+  .entry:last-child { border-bottom: 0; padding-bottom: 0; }
+  .entry .t {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    padding-top: 2px;
+  }
+  .entry .desc {
+    font-size: 14.5px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .entry .desc .hook {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--text-3);
+  }
+  .entry .desc .hook .p-dot {
+    display: inline-block;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--c);
+    flex-shrink: 0;
+  }
+  .entry .desc .hook .arrow { color: var(--text-4); }
+  .entry .desc .hook .pp { color: var(--pos-fg); font-weight: 500; }
+  .entry .desc .hook .pp.zero { color: var(--text-4); font-weight: 400; }
+  .entry .pts {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 14.5px;
+    color: var(--pos);
+    font-variant-numeric: tabular-nums;
+    padding-top: 1px;
+    white-space: nowrap;
+  }
+
+  .skel {
+    background: linear-gradient(90deg, var(--line-2), var(--line), var(--line-2));
+    background-size: 200% 100%;
+    animation: skel 1.4s ease-in-out infinite;
+    border-radius: 3px;
+  }
+  @keyframes skel { 0%{background-position: 100% 0} 100%{background-position:-100% 0} }
+
+  .err {
+    padding: 22px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--neg-fg);
+    background: var(--neg-bg);
+  }
+
+  .foot {
+    margin-top: 64px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-4);
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <b>life flow</b>
+      <span>v0.1</span>
+    </div>
+    <div class="meta">
+      <span class="hide-sm"><span id="meta-user">—</span></span>
+      <span><span id="meta-updated">—</span></span>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- JS renders here -->
+  </main>
+
+  <footer class="foot">
+    <span>flow.wu-happy.com</span>
+    <span>breath · v0.1</span>
+  </footer>
+</div>
+
+<script>
+(async function () {
+  const main = document.getElementById('main');
+  main.innerHTML = `
+    <section class="hero">
+      <div class="hero-main">
+        <div class="skel" style="width:120px;height:10px"></div>
+        <div class="skel" style="width:260px;height:110px;margin-top:18px;border-radius:4px"></div>
+        <div class="skel" style="width:180px;height:22px;margin-top:22px;border-radius:999px"></div>
+      </div>
+      <div class="hero-side">
+        <div class="skel" style="width:60px;height:10px"></div>
+        <div class="skel" style="width:90px;height:36px;margin-top:14px"></div>
+      </div>
+    </section>
+  `;
+
+  let data;
+  try {
+    const r = await fetch('./data.json', { cache: 'no-store' });
+    if (!r.ok) throw new Error('http ' + r.status);
+    data = await r.json();
+  } catch (e) {
+    main.innerHTML = `<div class="err">无法加载 data.json · ${e.message} · 请检查同目录下是否存在该文件</div>`;
+    return;
+  }
+
+  render(data);
+})();
+
+function fmtUpdated(iso) {
+  try {
+    const d = new Date(iso);
+    const pad = n => String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  } catch { return iso; }
+}
+
+function deltaState(today, yest) {
+  if (today > yest) return { kind: 'pos', arr: '↑', text: `比昨日多 ${today - yest} 分`, chip: `+${today - yest}` };
+  if (today < yest) return { kind: 'neg', arr: '↓', text: `比昨日少 ${yest - today} 分`, chip: `−${yest - today}` };
+  return { kind: 'neu', arr: '=', text: '与昨日持平', chip: '±0' };
+}
+
+function render(data) {
+  const main = document.getElementById('main');
+  document.getElementById('meta-updated').textContent = fmtUpdated(data.updated_at);
+  document.getElementById('meta-user').textContent = data.user.name;
+
+  const { today, yesterday, user, projects } = data;
+  const d = deltaState(today.points, yesterday.points);
+  const sortedProjects = [...projects].sort((a,b) => b.pct - a.pct);
+  const levelPct = Math.round(user.total_points * 100 / (user.total_points + user.points_to_next_level));
+
+  // build percentile bins — 10 bins; highlight the one matching rank_pct
+  const activeBin = Math.min(9, Math.floor(today.rank_pct / 10));
+
+  main.innerHTML = `
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-main">
+        <div class="eyebrow">
+          <span>今日积分</span>
+          <span class="sep">·</span>
+          <span class="mono" style="text-transform:none">${today.date}</span>
+        </div>
+        <div class="hero-number">
+          <span class="n">${today.points}</span>
+          <span class="unit">分</span>
+          <span class="delta-chip ${d.kind}">${d.arr} ${d.chip}</span>
+        </div>
+        <div class="hero-sub">
+          <span class="badge ${d.kind}"><span>${d.arr}</span><span>${d.text}</span></span>
+          <span class="rank-text">超过过往 <b class="tnum">${today.rank_pct}%</b> 天数</span>
+        </div>
+
+        <!-- state strip (demo of three chip states) -->
+        <div class="statestrip">
+          <span class="label">state</span>
+          <span class="badge pos"><span>↑</span><span>比昨日多 30 分</span></span>
+          <span class="badge neg"><span>↓</span><span>比昨日少 10 分</span></span>
+          <span class="badge neu"><span>=</span><span>与昨日持平</span></span>
+        </div>
+      </div>
+
+      <div class="hero-side">
+        <div class="y-label">昨日</div>
+        <div class="y-number">${yesterday.points}<span class="u">分</span></div>
+        <div class="y-date">${yesterday.date}</div>
+
+        <div class="percentile">
+          <div class="percentile-label">
+            <span>历史排名</span>
+            <span>超过过往 <b>${today.rank_pct}%</b></span>
+          </div>
+          <div class="bins" aria-hidden="true">
+            ${Array.from({length: 10}).map((_,i) => {
+              const h = 6 + (i * 2);
+              const active = i <= activeBin ? 'active' : '';
+              return `<i class="${active}" style="height:${h}px"></i>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATS -->
+    <section class="stats">
+      <div class="stat">
+        <div class="label">累计积分</div>
+        <div class="val"><span class="big">${user.total_points}</span><span class="small">分</span></div>
+      </div>
+      <div class="stat">
+        <div class="label">当前等级</div>
+        <div class="val">
+          <span class="big">Lv${user.level}</span>
+          <span class="small">${user.level_name}</span>
+        </div>
+        <div class="sublevel"><i style="width:${levelPct}%"></i></div>
+        <div class="sublevel-caption">
+          <span>${user.total_points} / ${user.total_points + user.points_to_next_level}</span>
+          <span>→ ${user.next_level_name}</span>
+        </div>
+      </div>
+      <div class="stat">
+        <div class="label">连续打卡</div>
+        <div class="val"><span class="big">${user.streak_days}</span><span class="small">天</span></div>
+        <div class="streak-dots">
+          ${Array.from({length: 7}).map((_,i) =>
+            `<i class="${i < user.streak_days ? '' : 'ghost'}"></i>`
+          ).join('')}
+        </div>
+      </div>
+    </section>
+
+    ${renderFocusBar()}
+
+    <div class="belowhero">
+      <!-- ENTRIES (今日明细 — 左侧，主角) -->
+      <section class="section">
+        <header class="section-head">
+          <div class="section-title">今日明细</div>
+          <div class="section-meta">${today.entries.length} 条 · ${today.points} 分</div>
+        </header>
+        <div class="entries">
+          ${today.entries.map(e => renderEntry(e, projects)).join('')}
+        </div>
+      </section>
+
+      <!-- PROJECTS (长期目标 — 右侧，可折叠) -->
+      <section class="section">
+        <header class="section-head">
+          <div class="section-title">长期目标</div>
+          <div class="section-meta">${projects.length} 项 · 点击展开</div>
+        </header>
+        <div class="projects" id="projects-list">
+          ${sortedProjects.map(p => renderProject(p)).join('')}
+        </div>
+      </section>
+    </div>
+  `;
+
+  bindProjectToggles();
+  startFocusClock();
+  return; // main.innerHTML already assigned above
+}
+
+// ——————— Focus window (9:30–18:00) ———————
+const FOCUS_START_MIN = 9 * 60 + 30;
+const FOCUS_END_MIN   = 18 * 60;
+const FOCUS_TOTAL_MIN = FOCUS_END_MIN - FOCUS_START_MIN; // 510
+
+function renderFocusBar() {
+  return `
+    <section class="focus-bar" id="focus-bar">
+      <div class="head">
+        <div class="title"><span class="live-dot" id="focus-dot"></span><span>今日专注时间池 · 09:30 → 18:00</span></div>
+        <div class="remaining" id="focus-remaining">—</div>
+      </div>
+      <div class="focus-track">
+        <span class="used" id="focus-used" style="width:0%"></span>
+        <span class="now" id="focus-now" style="left:0%"></span>
+      </div>
+      <div class="focus-axis">
+        <span>09:30</span>
+        <span class="mid">12:00</span>
+        <span class="mid">14:30</span>
+        <span>18:00</span>
+      </div>
+    </section>
+  `;
+}
+
+function updateFocusBar() {
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+
+  const used = document.getElementById('focus-used');
+  const nowEl = document.getElementById('focus-now');
+  const rem = document.getElementById('focus-remaining');
+  const dot = document.getElementById('focus-dot');
+  if (!used || !rem) return;
+
+  let state, usedPct, remainingMin;
+  if (nowMin < FOCUS_START_MIN) {
+    state = 'pre';
+    usedPct = 0;
+    remainingMin = FOCUS_TOTAL_MIN;
+  } else if (nowMin >= FOCUS_END_MIN) {
+    state = 'ended';
+    usedPct = 100;
+    remainingMin = 0;
+  } else {
+    state = 'live';
+    usedPct = ((nowMin - FOCUS_START_MIN) / FOCUS_TOTAL_MIN) * 100;
+    remainingMin = FOCUS_END_MIN - nowMin;
+  }
+
+  used.style.width = usedPct + '%';
+  used.classList.toggle('ended', state === 'ended');
+  if (nowEl) {
+    nowEl.style.left = usedPct + '%';
+    nowEl.classList.toggle('ended', state === 'ended');
+    nowEl.classList.toggle('pre', state === 'pre');
+  }
+  if (dot) {
+    dot.classList.toggle('ended', state === 'ended');
+    dot.classList.toggle('pre', state === 'pre');
+  }
+
+  const h = Math.floor(remainingMin / 60);
+  const m = Math.floor(remainingMin % 60);
+  const remainPct = Math.max(0, Math.min(100, 100 - usedPct));
+  let label;
+  if (state === 'pre') label = `尚未开始 · <b>${h}h ${String(m).padStart(2,'0')}m</b> 可用`;
+  else if (state === 'ended') label = `今日窗口已结束`;
+  else label = `剩 <b>${h}h ${String(m).padStart(2,'0')}m</b> <span class="pct">${remainPct.toFixed(0)}% 可用</span>`;
+  rem.innerHTML = label;
+}
+
+let _focusTimer = null;
+function startFocusClock() {
+  updateFocusBar();
+  if (_focusTimer) clearInterval(_focusTimer);
+  _focusTimer = setInterval(updateFocusBar, 30 * 1000); // 30s cadence
+}
+
+function renderProject(p) {
+  const zero = p.pct === 0;
+  const delta = p.today_delta_pct;
+  const prev = Math.max(0, p.pct - delta);
+  const remaining = Math.max(0, 100 - p.pct);
+
+  return `
+    <div class="project" style="--c:${p.color}" data-pid="${p.id}">
+      <button class="project-summary" type="button" aria-expanded="false">
+        <div class="project-head">
+          <span class="chev" aria-hidden="true">›</span>
+          <span style="width:9px;height:9px;border-radius:50%;background:${p.color};flex-shrink:0;display:inline-block"></span>
+          <span style="flex:1;min-width:0;font-size:14.5px;font-weight:500;color:var(--text);letter-spacing:-0.005em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(p.name)}</span>
+          <span class="tnum" style="font-family:var(--mono);font-weight:500;font-size:14px;color:var(--text);font-variant-numeric:tabular-nums">${fmtPct(p.pct)}%</span>
+          <span style="display:inline-flex;align-items:center;padding:3px 7px;border-radius:999px;font-family:var(--mono);font-size:10.5px;font-weight:500;background:var(--pos-bg);color:var(--pos-fg);${delta > 0 ? '' : 'visibility:hidden'}">+${fmtPct(delta)}%</span>
+        </div>
+        <div class="track ${zero ? 'zero' : ''}" aria-hidden="true" style="margin-left:24px">
+          ${zero ? '' : `
+            <span class="fill" style="width:${p.pct}%"></span>
+            ${delta > 0 ? `<span class="inc" style="left:${prev}%;width:${delta}%"></span>` : ''}
+          `}
+        </div>
+      </button>
+      <div class="project-detail">
+        <div class="row"><span class="k">category</span><span class="v">${escapeHtml(p.category)}</span></div>
+        <div class="row"><span class="k">today</span><span class="v">${delta > 0 ? `<b>+${fmtPct(delta)}%</b> (${fmtPct(prev)}% → ${fmtPct(p.pct)}%)` : (zero ? '待启程' : '无变动')}</span></div>
+        <div class="row"><span class="k">remaining</span><span class="v"><b>${fmtPct(remaining)}%</b> 到终点</span></div>
+        <div class="row"><span class="k">id</span><span class="v">${escapeHtml(p.id)}</span></div>
+      </div>
+    </div>
+  `;
+}
+
+function bindProjectToggles() {
+  const list = document.getElementById('projects-list');
+  if (!list) return;
+  list.addEventListener('click', (ev) => {
+    const btn = ev.target.closest('.project-summary');
+    if (!btn) return;
+    const proj = btn.closest('.project');
+    const open = proj.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+}
+
+function renderEntry(e, projects) {
+  const p = projects.find(x => x.id === e.project_id);
+  const pname = p ? p.name : e.project_id;
+  const color = p ? p.color : '#888';
+  const showDelta = e.project_delta_pct > 0;
+  const deltaStr = fmtPct(e.project_delta_pct);
+  return `
+    <div class="entry" style="--c:${color}">
+      <div class="t">${e.time}</div>
+      <div class="desc">
+        ${escapeHtml(e.task)}
+        <span class="hook">
+          <span class="p-dot"></span>
+          <span>${escapeHtml(pname)}</span>
+          <span class="arrow">→</span>
+          ${showDelta
+            ? `<span class="pp">+${deltaStr}%</span>`
+            : `<span class="pp zero">+0%</span>`}
+        </span>
+      </div>
+      <div class="pts">+${e.points}</div>
+    </div>
+  `;
+}
+
+function fmtPct(n) {
+  if (n === 0) return '0';
+  if (Number.isInteger(n)) return String(n);
+  return (Math.round(n * 10) / 10).toString();
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+{
+  "schema_version": "0.1",
+  "updated_at": "2026-04-20T16:00:00+09:00",
+  "user": {
+    "name": "吴昊",
+    "level": 1,
+    "level_name": "史莱姆",
+    "next_level_name": "冒险者",
+    "total_points": 240,
+    "points_to_next_level": 260,
+    "streak_days": 3
+  },
+  "today": {
+    "date": "2026-04-20",
+    "points": 150,
+    "rank_pct": 68,
+    "entries": [
+      {
+        "time": "09:30",
+        "task": "跑步 30 分钟",
+        "project_id": "weight_loss",
+        "project_delta_pct": 2,
+        "points": 50
+      },
+      {
+        "time": "10:30",
+        "task": "论文阅读 · BRCA survival 调研",
+        "project_id": "clsbiogate",
+        "project_delta_pct": 1,
+        "points": 50
+      },
+      {
+        "time": "14:00",
+        "task": "日语背单词 50 个",
+        "project_id": "japanese_n1",
+        "project_delta_pct": 0.5,
+        "points": 30
+      },
+      {
+        "time": "16:00",
+        "task": "知识库 v4 · 新增 1 条生活感悟",
+        "project_id": "knowledge_v4",
+        "project_delta_pct": 0,
+        "points": 20
+      }
+    ]
+  },
+  "yesterday": {
+    "date": "2026-04-19",
+    "points": 120
+  },
+  "projects": [
+    { "id": "knowledge_v4", "name": "知识库 v4", "pct": 85, "today_delta_pct": 0, "color": "#7F77DD", "category": "learning" },
+    { "id": "knight_lv4", "name": "Lv4 骑士 (等级路线)", "pct": 73, "today_delta_pct": 1, "color": "#BA7517", "category": "gamification" },
+    { "id": "streak", "name": "积分 streak", "pct": 29, "today_delta_pct": 1, "color": "#BA7517", "category": "gamification" },
+    { "id": "japanese_n1", "name": "日语 N1", "pct": 25, "today_delta_pct": 0.5, "color": "#378ADD", "category": "learning" },
+    { "id": "clsbiogate", "name": "CLSBiOGate 主论文", "pct": 15, "today_delta_pct": 1, "color": "#1D9E75", "category": "research" },
+    { "id": "weight_loss", "name": "跑步减肥", "pct": 10, "today_delta_pct": 2, "color": "#639922", "category": "health" },
+    { "id": "appearance", "name": "外在形象管理", "pct": 0, "today_delta_pct": 0, "color": "#D4537E", "category": "lifestyle" }
+  ]
+}
