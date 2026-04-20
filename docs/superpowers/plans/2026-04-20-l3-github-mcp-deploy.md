@@ -2,7 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Stand up the L3 infrastructure (private GitHub repo + Fine-grained PAT + Cloudflare Pages at flow.wu-happy.com + iOS claude.ai GitHub MCP) so that at the end of each daily L2 conversation Claude can write `data.json` into the repo and the site updates within 30 s.
+**Goal:** Stand up the L3 infrastructure (private GitHub repo + Cloudflare Pages at flow.wu-happy.com + claude.ai web Custom Connector via Rube/Composio) so that at the end of each daily L2 conversation Claude can write `data.json` into the repo and the site updates within 30 s.
+
+**AMENDMENT 2026-04-21**: Auth path pivoted from "Fine-grained PAT in iOS Connectors" → "Rube (Composio) Custom Connector on claude.ai web". Reason: iOS claude.ai app lacks built-in GitHub connector and Rube via Composio OAuth works out-of-the-box without self-hosting MCP. Tasks 4/6/7/9 are amended inline below.
 
 **Architecture:** No new code in this plan — L3 is infrastructure glue. Work splits into (a) manual user actions on external consoles (GitHub, Cloudflare, iOS claude.ai), (b) local git operations that I run, (c) verification commands/visual checks that I prescribe after each manual step.
 
@@ -153,7 +155,9 @@ Expected: see all files (Breath.html, data.json, prompts/, scripts/, tests/, doc
 
 ---
 
-### Task 4: Create Fine-grained PAT
+### Task 4: (AMENDED 2026-04-21 · SUPERSEDED BY RUBE) Create Fine-grained PAT
+
+**Status after amendment**: PAT was created 2026-04-20, then **deleted 2026-04-21** after Rube/Composio path was confirmed. PAT path retained here as **cold fallback** if Rube ever fails. To use fallback: regenerate per the steps below (5 min).
 
 **Files:** None (external action)
 
@@ -252,9 +256,18 @@ If it's 404 or TLS error: wait 2 more minutes, retry. If still failing, check CF
 
 ---
 
-### Task 6: iOS claude.ai GitHub Connector
+### Task 6: (AMENDED 2026-04-21) claude.ai Custom Connector via Rube
 
-**Files:** None (iOS app config)
+**Status after amendment**: iOS claude.ai has no built-in GitHub connector. Pivoted to claude.ai **web** with **Rube (Composio)** Custom Connector. User did this 2026-04-21 and confirmed GitHub is manually connected via Composio ("User has manually connected the apps: github" surfaced in Rube account info).
+
+Actual steps used (reference; not re-run):
+1. On claude.ai web → Settings → Connectors → Custom → add Rube MCP endpoint
+2. OAuth through Composio → grant access to lifeflow repo
+3. Verify by asking Claude `list my github repos` — should surface `lifeflow` among others
+
+iOS app equivalent setup [未验证] — verify on first iOS use (part of Task 8 follow-through if user wants mobile flow).
+
+**Files:** None (iOS app config — now claude.ai web config)
 
 - [ ] **Step 1 (user action): Open claude.ai on iPhone/iPad**
 
@@ -279,9 +292,16 @@ After auth, Connectors page should show GitHub with a green dot or ✓. User tel
 
 ---
 
-### Task 7: MCP write connectivity test
+### Task 7: (AMENDED 2026-04-21) MCP write connectivity test via Rube
 
-**Files:** None (live test)
+**Status after amendment**: Verified on claude.ai web 2026-04-21. Three ops all PASS:
+- READ: `GITHUB_GET_REPOSITORY_CONTENT owner=hbhggh repo=lifeflow path=/` → returned full tree
+- WRITE: `GITHUB_COMMIT_MULTIPLE_FILES` with `upserts=[{path:'rube-mcp-write-test.md',content:'...'}]` → commit `ccd47f8`
+- DELETE: same tool with `deletes=[rube-mcp-write-test.md]` → commit `3c37035`
+
+Local `git pull` reconciled both commits; working tree clean.
+
+**Files:** None (live test; no artifacts retained)
 
 - [ ] **Step 1 (user action): Open new claude.ai conversation**
 
@@ -403,10 +423,12 @@ If any ✗: triage via spec's error-handling section.
 
 ---
 
-### Task 9: PAT rotation reminder doc
+### Task 9: (AMENDED 2026-04-21) Credential rotation doc
+
+**Status after amendment**: PAT was deleted 2026-04-21; 90-day PAT rotation no longer relevant. Composio OAuth token rotation is handled by Composio backend. Doc subject shifts to **"credential hygiene checklist"** — mostly what to do if Rube/Composio goes down, and quarterly review of Composio app permissions.
 
 **Files:**
-- Create: `docs/pat-rotation.md`
+- Create: `docs/credential-hygiene.md` (renamed from `pat-rotation.md`)
 
 - [ ] **Step 1: Write rotation doc**
 

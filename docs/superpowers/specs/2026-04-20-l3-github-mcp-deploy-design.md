@@ -1,9 +1,27 @@
 # L3 · GitHub MCP 推送 + Cloudflare Pages 部署
 
-**Status**: Draft (pending user review)
-**Date**: 2026-04-20
+**Status**: Amended 2026-04-21 (auth path pivoted from Fine-grained PAT → Rube/Composio OAuth)
+**Date**: 2026-04-20 (original), 2026-04-21 (amendment)
 **Session origin**: L3 brainstorming (post L2 完成)
-**Scope**: L3 only — GitHub 基础设施 + CF Pages + iOS claude.ai MCP 配置。L4 (网页刷新按钮) 另起 spec。
+**Scope**: L3 only — GitHub 基础设施 + CF Pages + claude.ai MCP 配置。L4 (网页刷新按钮) 另起 spec。
+
+---
+
+## UPDATE 2026-04-21 · 认证路径 pivot
+
+原计划: iOS claude.ai app 的 built-in GitHub Connector + Fine-grained PAT。
+
+**实际**: iOS claude.ai **没有** built-in GitHub connector (只在 claude.ai web / desktop 有, 且需要自建 custom connector)。
+
+**新路径**: **Rube (Composio 托管) Custom Connector** 经 Composio OAuth 连 GitHub。
+
+| 原决策 | 新决策 |
+|---|---|
+| 推送触发方式: Claude iOS Connector + Fine-grained PAT | Claude web claude.ai Connector + Rube via Composio OAuth |
+| PAT: `lifeflow-mcp-write` (90d, Contents R+W) | **已删** — Composio OAuth 全权代理, PAT 失去用途 |
+| Gate 2 验证在 iOS claude.ai | Gate 2 验证在 **claude.ai web** (desktop), iOS 仍未独立验证 [未验证] |
+
+**验证证据** (2026-04-21): Rube `GITHUB_GET_REPOSITORY_CONTENT` / `GITHUB_COMMIT_MULTIPLE_FILES` read+write+delete 三路全通, commit SHAs `ccd47f8` (write) + `3c37035` (delete) 已上 master 并清理。
 
 ---
 
@@ -51,13 +69,13 @@ iPhone/iPad/Mac 浏览器 · 刷新即最新
 - 初始化时**不**自动 README / gitignore / LICENSE (repo 要空, 等我们 push 现有 8 个 commit)
 - 默认分支: `master` (沿用本地现有)
 
-### C2 · Fine-grained PAT
+### C2 · (DEPRECATED 2026-04-21) Fine-grained PAT
 
-- Name: `lifeflow-mcp-write`
-- Expiration: 90 天 (合理 rotation 周期)
-- Repository access: **Only select repositories** → `lifeflow`
-- Permissions: `Contents: Read and write` (其他全 None)
-- 存储位置: iOS claude.ai Connectors 里的 GitHub MCP token 字段
+原设计: `lifeflow-mcp-write`, 90 天, 仅 lifeflow repo, Contents R+W, 存 iOS Connectors。
+
+**已废弃**。Rube/Composio 接管了 GitHub 写权限, PAT 失去 consumer。**已删除** (见 UPDATE 2026-04-21 段)。
+
+若未来需要 fallback(Rube 停服 / 改走 Claude Code CLI write): 按原描述重建 PAT 即可, 5 min。
 
 ### C3 · 本地 git remote + 首次 push
 
@@ -76,11 +94,15 @@ iPhone/iPad/Mac 浏览器 · 刷新即最新
 - Custom domain: `flow.wu-happy.com` → 自动发 CNAME, 需 wu-happy.com DNS 在 CF 管理
 - HTTPS: 自动 (Let's Encrypt)
 
-### C5 · iOS claude.ai Connectors
+### C5 · (UPDATED 2026-04-21) claude.ai Custom Connector via Rube (Composio)
 
-- Settings → Connectors → GitHub
-- 填 Fine-grained PAT (C2 产物)
-- 测试: 让 Claude 读一次 `lifeflow/data.json`, 验证 MCP 连通
+**平台**: claude.ai web (desktop). iOS 对等性 [未验证]。
+
+**连接方式**: Settings → Connectors → **Custom** → Rube MCP 端点 → Composio OAuth 授权 → 选允许 `lifeflow` repo
+
+**调用**: Rube 提供 `GITHUB_*` tool_slug (如 `GITHUB_GET_REPOSITORY_CONTENT`, `GITHUB_COMMIT_MULTIPLE_FILES`)。Claude 通过 `COMPOSIO_SEARCH_TOOLS` 先查 schema, 再 `COMPOSIO_MULTI_EXECUTE_TOOL` 跑。比官方 MCP 多一步, 但免去自部署。
+
+**验证测试**: read `/` 目录 → write `rube-mcp-write-test.md` → delete 同文件。三步全通 (2026-04-21)。
 
 ---
 
@@ -141,14 +163,14 @@ docs/superpowers/plans/2026-04-20-l2-*.md
 22:01 · 粘 L2 prompt (from prompts/l2-calflow-to-lifeflow.md), 替换 <TODAY>
 22:02 · 回合 1: Claude 列清单, 用户确认
 22:03 · 回合 2: 协商三规则
-22:04 · 回合 3: Claude 输出 data.json + 立即 MCP 写 repo
-        Claude 的收尾动作是:
-          call github.put_contents({
-            path: 'data.json',
-            content: <base64-encoded data.json>,
-            message: 'data: daily sync 2026-04-20',
-            branch: 'master'
-          })
+22:04 · 回合 3: Claude 输出 data.json + 立即经 Rube 写 repo
+        Claude 的收尾动作 (updated 2026-04-21):
+          1. COMPOSIO_SEARCH_TOOLS → 查 GITHUB_COMMIT_MULTIPLE_FILES schema
+          2. COMPOSIO_MULTI_EXECUTE_TOOL:
+               tool: GITHUB_COMMIT_MULTIPLE_FILES
+               upserts: [{ path: 'data.json', content: <new data.json> }]
+               message: 'data: daily sync 2026-04-21'
+               branch: 'master'
 22:04:30 · Cloudflare Pages 收到 push webhook, 开始构建
 22:05 · 构建完成 (纯静态, <30 秒)
 22:05:10 · flow.wu-happy.com 已是最新
