@@ -1,0 +1,74 @@
+{
+  "schema_version": "0.1",
+  "updated_at": "2026-04-21T02:05:00+09:00",
+  "description": "Lifeflow 静态配置 · 单一真相源 (SSOT). 等级阈值/积分规则/Notion DB 路由集中于此. Claude 通过 Composio MCP 读取 (GITHUB_GET_REPOSITORY_CONTENT: owner=hbhggh, repo=lifeflow, path=config.json).",
+
+  "levels": [
+    { "lv": 1,  "name": "史莱姆",   "threshold": 0 },
+    { "lv": 2,  "name": "哥布林",   "threshold": 500 },
+    { "lv": 3,  "name": "战士",     "threshold": 1500 },
+    { "lv": 4,  "name": "骑士",     "threshold": 3500 },
+    { "lv": 5,  "name": "圣骑士",   "threshold": 7000 },
+    { "lv": 6,  "name": "法师",     "threshold": 12000 },
+    { "lv": 7,  "name": "大法师",   "threshold": 20000 },
+    { "lv": 8,  "name": "学者",     "threshold": 35000 },
+    { "lv": 9,  "name": "大师",     "threshold": 60000 },
+    { "lv": 10, "name": "博士",     "threshold": 99999 }
+  ],
+
+  "points_rules": {
+    "small":       { "value": 10,             "examples": ["喝水", "早起", "整理"] },
+    "medium":      { "value": 50,             "examples": ["背单词", "读论文 30min", "运动"] },
+    "discipline":  { "value_range": [100, 150], "examples": ["不吃夜宵", "完成全天计划"] },
+    "milestone":   { "value": 250,            "examples": ["论文投稿", "考试通过", "阶段目标达成"] },
+    "leisure_deduction": {
+      "light_per_hour": 30,
+      "heavy_per_hour": 50
+    }
+  },
+
+  "daily_targets": {
+    "green":  { "total": 70,  "research_min": 20, "label": "🟢 保底" },
+    "yellow": { "total": 130, "research_min": 30, "label": "🟡 正常" },
+    "red":    { "total": 220, "research_min": 50, "label": "🔴 冲刺" }
+  },
+
+  "notion_knowledge_v4": {
+    "description": "心得层 v4 Gallery DBs. Claude 按主题路由写入.",
+    "parent_page_id": "33c8d2e2-f724-817f-a69e-ed3c5365d155",
+    "databases": {
+      "sleep":    { "ds_id": "4a54e726-0c94-4628-ae2a-ee5111524696", "title": "🛌 作息",        "themes": ["减肥", "运动", "习惯", "精力", "睡眠", "饮食"] },
+      "ai_tools": { "ds_id": "78b4e02d-ee0e-4238-b625-5eb35d28a9b4", "title": "🤖 AI 工具",    "themes": ["MCP", "工作流", "Claude", "提示工程", "Rube", "Composio"] },
+      "papers":   { "ds_id": "6992886e-ca76-40d4-94e8-6706b1439e8b", "title": "📖 看论文+写论文", "themes": ["看论文", "写论文", "研究", "BMC", "审稿"] },
+      "code":     { "ds_id": "e5cad2dc-b60d-4f15-8a59-40e129d82f7a", "title": "💻 代码",        "themes": ["编程", "架构", "调试", "PyTorch", "OmicsGate"] },
+      "japanese": { "ds_id": "20acc8bf-f22f-46df-9070-fa58022aa279", "title": "🇯🇵 日语",       "themes": ["日语", "N1", "语法", "词汇", "听力"] }
+    }
+  },
+
+  "notion_idea_layer": {
+    "description": "想法层 · 未成熟原子草稿. 准入需吴昊口头命令, Claude 不自动写.",
+    "parent_page_id": "3448d2e2-f724-8120-be54-f20bbac0aa77",
+    "databases": {
+      "ai_tools": { "ds_id": "456746f5-af39-43a9-9b8a-afa1142a7b05", "title": "🌱 AI 工具·想法层", "live": true }
+    },
+    "pending_databases": ["代码·想法层", "看论文+写论文·想法层", "日语·想法层", "作息·想法层"]
+  },
+
+  "notion_routing_fallback": {
+    "rule": "若对话产出心得无法明确归类, Claude 列出候选 3 个 DB 让吴昊选. 默认偏向 🛌作息 (覆盖最广).",
+    "archived_not_to_use": {
+      "page_id": "3378d2e2-f724-8171-ad4f-ce7d1ba0d601",
+      "title": "🎮 生活感悟 (v3 以前, 已归档在 📦项目归档下)"
+    }
+  },
+
+  "meta": {
+    "memory_dependencies": [
+      "memory#3 (当前总分/Lv/streak, 全局 memory)",
+      "memory#12 (等级阈值源头, 本 config 是镜像)",
+      "memory#14-16 (Notion 知识库 v4 结构)",
+      "memory#22 (data.json user 块源头规则)"
+    ],
+    "update_policy": "阈值/规则调整时, 同时更新 memory#12 + 本 config.json. 两处不一致时以 memory 为准 (Claude 第一时间能看到). data.json 每日 L2 刷新, 不存 config 数据."
+  }
+}
