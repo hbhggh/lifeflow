@@ -1070,6 +1070,12 @@
   /* drag: kill the 0.9s arc transition so the ring tracks the finger 1:1 */
   .ft-ring.setup.dragging .prog-c { transition: none; }
   .ft-ring.setup.dragging .handle { transition: none; }
+  /* running-state arc head — small dot that rides the arc tip */
+  .ft-ring .ft-ring-head {
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+    pointer-events: none;
+    transition: cx 0.9s linear, cy 0.9s linear, fill 0.4s ease;
+  }
   /* subtle hint pulse on the empty ring to tell user "draggable" */
   .ft-ring.setup.draggable-empty .track-c {
     stroke-dasharray: 2 6;
@@ -2331,7 +2337,10 @@ const FocusTimer = (function () {
         ? `开始 <span class="cta-sub">· ${minutes} min</span>`
         : `开始计时`;
 
-      const handleTheta = -Math.PI/2 + ringFrac * 2 * Math.PI;
+      // handle/head use visual-θ directly: SVG y-down + CSS rotate(-90deg) on <svg>
+      // aligns SVG's CCW-from-3-o'clock with the viewer's CW-from-12-o'clock, so no
+      // extra -π/2 shift is needed (the old offset was a double-correction bug).
+      const handleTheta = ringFrac * 2 * Math.PI;
       const handleX = 90 + R * Math.cos(handleTheta);
       const handleY = 90 + R * Math.sin(handleTheta);
 
@@ -2402,16 +2411,22 @@ const FocusTimer = (function () {
       const tier = tierFor(state.preClarity);
       const R = 80;
       const C = 2 * Math.PI * R;
-      let progressFrac = 0;
+      // progress = elapsed / planned (accumulating), so arc grows 0 → full and the
+      // head cap dot rides the arc tip, starting from 12 o'clock CW.
+      let progress = 0;
       let ringMode = 'none';
       if (mode === 'countdown' && state.plannedSec) {
-        progressFrac = Math.max(0, Math.min(1, remainingSec() / state.plannedSec));
+        progress = Math.max(0, Math.min(1, elapsedSec() / state.plannedSec));
         ringMode = 'countdown';
       } else if (mode === 'stopwatch') {
-        progressFrac = 1;
+        progress = 1; // no plan — let the breath animation carry a full ring
         ringMode = 'breath';
       }
-      const dashOffset = C * (1 - progressFrac);
+      const dashOffset = C * (1 - progress);
+      const headTheta = progress * 2 * Math.PI;
+      const headX = 90 + R * Math.cos(headTheta);
+      const headY = 90 + R * Math.sin(headTheta);
+      const showHead = ringMode === 'countdown';
 
       const projName = state.projectId
         ? (projects.find(p=>p.id===state.projectId)||{}).name
@@ -2474,6 +2489,7 @@ const FocusTimer = (function () {
                 <circle class="track-c" cx="90" cy="90" r="${R}"></circle>
                 <circle class="prog-c" cx="90" cy="90" r="${R}"
                   style="stroke:${tier.color}; stroke-dasharray:${C.toFixed(2)}; stroke-dashoffset:${dashOffset.toFixed(2)}"></circle>
+                ${showHead ? `<circle class="ft-ring-head" cx="${headX.toFixed(2)}" cy="${headY.toFixed(2)}" r="5" style="fill:${tier.color}"></circle>` : ''}
               </svg>
               ${nameHtmlRun}
               <div class="center">
@@ -2750,9 +2766,9 @@ const FocusTimer = (function () {
           const innerFrac = (((minutes - 1) % RING_FULL_MIN) + 1) / RING_FULL_MIN;
           theta = innerFrac * 2 * Math.PI;
         }
-        const svgAngle = -Math.PI / 2 + theta;
-        const hx = 90 + R * Math.cos(svgAngle);
-        const hy = 90 + R * Math.sin(svgAngle);
+        // visual-θ maps 1:1 to SVG atan2 coords (see note on handleTheta in render).
+        const hx = 90 + R * Math.cos(theta);
+        const hy = 90 + R * Math.sin(theta);
         if (!handle) {
           handle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
           handle.setAttribute('class', 'handle');
@@ -2889,12 +2905,18 @@ const FocusTimer = (function () {
         const left = state.mode === 'countdown' ? remainingSec() : elapsedSec();
         big.textContent = fmtHMS(left);
       }
-      // update ring
+      // update ring (arc grows with progress; head dot rides the arc tip)
       const progC = panel.querySelector('.ft-ring .prog-c');
       if (progC && state.mode === 'countdown' && state.plannedSec) {
         const R = 80, C = 2 * Math.PI * R;
-        const frac = Math.max(0, Math.min(1, remainingSec() / state.plannedSec));
-        progC.style.strokeDashoffset = (C * (1 - frac)).toFixed(2);
+        const progress = Math.max(0, Math.min(1, elapsedSec() / state.plannedSec));
+        progC.style.strokeDashoffset = (C * (1 - progress)).toFixed(2);
+        const head = panel.querySelector('.ft-ring .ft-ring-head');
+        if (head) {
+          const theta = progress * 2 * Math.PI;
+          head.setAttribute('cx', (90 + R * Math.cos(theta)).toFixed(2));
+          head.setAttribute('cy', (90 + R * Math.sin(theta)).toFixed(2));
+        }
       }
       // update elapsed hint on countdown
       const hint = panel.querySelector('.ft-ring .hint');
