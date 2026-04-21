@@ -1,0 +1,1216 @@
+<!DOCTYPE html><html lang="zh" data-immersive-translate-page-theme="light"><head>
+
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>life flow · Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* light — cool-neutral, near-paper */
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --surface-2: #f4f4f4;
+    --text: #111111;
+    --text-2: #5a5a5a;
+    --text-3: #8a8a8a;
+    --text-4: #b8b8b8;
+    --line: #e6e6e6;
+    --line-2: #ececec;
+    --rule: #d4d4d4;            /* stronger hairline */
+    --pos: #0e7a59;             /* positive */
+    --pos-fg: #0b6146;
+    --pos-bg: #d7efe3;
+    --neg: #b94a1f;
+    --neg-fg: #8a3612;
+    --neg-bg: #f6dfd1;
+    --neu-bg: #ececec;
+    --neu-fg: #5a5a5a;
+    --track: #ececec;
+    --track-ghost: #f0f0f0;
+    --focus: #1e5eff;
+    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Inter, system-ui, sans-serif;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0b0c;
+      --surface: #101012;
+      --surface-2: #15151a;
+      --text: #f2f2f2;
+      --text-2: #b5b5b8;
+      --text-3: #7f7f86;
+      --text-4: #54545c;
+      --line: #1f1f24;
+      --line-2: #18181d;
+      --rule: #2a2a31;
+      --pos: #5dcaa5;
+      --pos-fg: #76dcb7;
+      --pos-bg: rgba(93, 202, 165, 0.14);
+      --neg: #f08a5a;
+      --neg-fg: #f29c72;
+      --neg-bg: rgba(240, 138, 90, 0.14);
+      --neu-bg: rgba(255, 255, 255, 0.06);
+      --neu-fg: #b5b5b8;
+      --track: rgba(255, 255, 255, 0.07);
+      --track-ghost: rgba(255, 255, 255, 0.035);
+      --focus: #7aa2ff;
+      color-scheme: dark;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .tnum { font-variant-numeric: tabular-nums; }
+
+  /* ============================ */
+  /* Shell — editor-ish chrome    */
+  /* ============================ */
+  .app {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 20px 20px 80px;
+  }
+  @media (min-width: 768px) { .app { padding: 28px 32px 120px; } }
+  @media (min-width: 1200px) { .app { padding: 36px 48px 140px; } }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 0 18px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 24px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    color: var(--text);
+  }
+  .brand .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--pos);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--pos) 22%, transparent);
+  }
+  .brand .slash { color: var(--text-4); }
+  .topbar-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+    display: flex;
+    gap: 16px;
+  }
+  .topbar-meta .k { color: var(--text-4); }
+  .topbar-meta .v { color: var(--text-2); }
+  @media (max-width: 520px) {
+    .topbar-meta .item:last-child { display: none; }
+  }
+
+  /* ============================ */
+  /* Section label                */
+  /* ============================ */
+  .section {
+    margin-top: 28px;
+  }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .section-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title .num {
+    color: var(--text-4);
+  }
+  .section-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+  }
+
+  /* ============================ */
+  /* HERO                         */
+  /* ============================ */
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--surface);
+    overflow: hidden;
+  }
+  @media (min-width: 560px) {
+    .hero { grid-template-columns: 60% 40%; }
+  }
+  .hero-main {
+    padding: 22px 22px 22px;
+    position: relative;
+  }
+  @media (min-width: 560px) {
+    .hero-main { border-right: 1px solid var(--line); }
+  }
+  .hero-side {
+    padding: 22px;
+    background: var(--surface);
+    position: relative;
+  }
+  .hero-side::before {
+    /* top hairline on mobile (stacked) */
+    content: "";
+    position: absolute;
+    left: 22px; right: 22px; top: 0;
+    border-top: 1px solid var(--line);
+  }
+  @media (min-width: 560px) { .hero-side::before { display: none; } }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .eyebrow .sep {
+    width: 12px; height: 1px; background: var(--rule); display: inline-block;
+  }
+
+  .hero-number {
+    position: relative;
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 10px;
+    line-height: 1;
+  }
+  .hero-number .n {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: clamp(56px, 14vw, 88px);
+    letter-spacing: -0.02em;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .hero-number .unit {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-3);
+    margin-top: 10px;
+  }
+  .hero-number .delta-chip {
+    position: absolute;
+    top: -2px;
+    right: -46px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px 7px;
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+    transform: translateX(100%);
+  }
+  .hero-number .delta-chip.pos { background: var(--pos-bg); color: var(--pos-fg); }
+  .hero-number .delta-chip.neg { background: var(--neg-bg); color: var(--neg-fg); }
+  .hero-number .delta-chip.neu { background: var(--neu-bg); color: var(--neu-fg); }
+
+  .hero-sub {
+    margin-top: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+  }
+  .badge .arr { font-size: 11px; }
+  .badge.pos { background: var(--pos-bg); color: var(--pos-fg); }
+  .badge.neg { background: var(--neg-bg); color: var(--neg-fg); }
+  .badge.neu { background: var(--neu-bg); color: var(--neu-fg); }
+
+  .hero-side .y-n {
+    font-family: var(--mono);
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--text-2);
+    margin-top: 8px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .hero-side .y-n .u { font-size: 11px; color: var(--text-3); margin-left: 4px; }
+  .hero-side .rank {
+    margin-top: 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+  }
+  .hero-side .rank b {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* tiny rank bar — 68th percentile visualization */
+  .rankbar {
+    margin-top: 10px;
+    height: 3px;
+    background: var(--track);
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+  }
+  .rankbar > i {
+    position: absolute; inset: 0 auto 0 0;
+    background: var(--text);
+    opacity: 0.85;
+  }
+  .rankbar .tick {
+    position: absolute;
+    top: -3px;
+    width: 1px;
+    height: 9px;
+    background: var(--text-4);
+  }
+
+  /* stats strip */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    margin-top: 16px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--surface);
+    overflow: hidden;
+  }
+  .stat {
+    padding: 16px 16px 14px;
+    border-right: 1px solid var(--line);
+    position: relative;
+  }
+  .stat:last-child { border-right: 0; }
+  .stat .label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .stat .val {
+    margin-top: 6px;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    font-family: var(--mono);
+    font-weight: 500;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat .val .big { font-size: 24px; letter-spacing: -0.01em; }
+  .stat .val .small { font-size: 11px; color: var(--text-3); font-weight: 400; }
+
+  .stat .sublevel {
+    margin-top: 10px;
+    height: 2px;
+    background: var(--track);
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat .sublevel > i {
+    position: absolute; inset: 0 auto 0 0;
+    background: var(--text);
+    opacity: 0.8;
+  }
+  .stat .sublevel-caption {
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-4);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .stat .streak-dots {
+    display: flex; gap: 3px; margin-top: 8px;
+  }
+  .stat .streak-dots i {
+    width: 6px; height: 6px; border-radius: 1px;
+    background: var(--text);
+  }
+  .stat .streak-dots i.ghost {
+    background: var(--track);
+  }
+
+  /* ============================ */
+  /* Hero-state demo strip        */
+  /* ============================ */
+  .statestrip {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+  }
+  .statestrip .cell {
+    border: 1px dashed var(--line);
+    border-radius: 3px;
+    padding: 10px 12px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .statestrip .cell .k {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-4);
+  }
+
+  /* ============================ */
+  /* Desktop layout: 2col below hero */
+  /* ============================ */
+  .belowhero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    margin-top: 8px;
+  }
+  @media (min-width: 1000px) {
+    .belowhero {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 6fr);
+      gap: 36px;
+    }
+  }
+
+  /* ============================ */
+  /* Projects                     */
+  /* ============================ */
+  .projects {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .project {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .project-row1 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .project-row1 .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--c, #999);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--c, #999) 18%, transparent);
+  }
+  .project-row1 .name {
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.005em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .project-row1 .pct {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .project-row1 .delta {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    background: var(--pos-bg);
+    color: var(--pos-fg);
+  }
+  .project-row1 .delta.zero { visibility: hidden; }
+
+  .track {
+    position: relative;
+    height: 3px;
+    background: var(--track);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .track .fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: var(--c, #888);
+    border-radius: 2px;
+  }
+  /* today increment highlight — slightly paler color overlaid at the leading edge */
+  .track .inc {
+    position: absolute;
+    top: 0; bottom: 0;
+    background: color-mix(in oklch, var(--c, #888) 45%, transparent);
+  }
+  /* 0%-project dashed track */
+  .track.zero {
+    background: transparent;
+    border-top: 1px dashed var(--rule);
+    border-radius: 0;
+    height: 3px;
+  }
+  .track.zero .fill, .track.zero .inc { display: none; }
+
+  .project-row3 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-4);
+    letter-spacing: 0.02em;
+  }
+  .project-row3 .cat {
+    text-transform: uppercase;
+  }
+  .project-row3 .today-inc {
+    color: var(--text-3);
+  }
+  .project-row3 .today-inc b {
+    color: var(--text-2);
+    font-weight: 500;
+  }
+
+  /* ============================ */
+  /* Entries                      */
+  /* ============================ */
+  .entries {
+    display: flex;
+    flex-direction: column;
+  }
+  .entry {
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    gap: 12px;
+    padding: 14px 0;
+    align-items: start;
+    border-bottom: 1px solid var(--line-2);
+  }
+  .entry:last-child { border-bottom: 0; }
+  .entry .t {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    padding-top: 2px;
+  }
+  .entry .desc {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.45;
+  }
+  .entry .desc .hook {
+    display: block;
+    margin-top: 4px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--text-3);
+    letter-spacing: 0.005em;
+  }
+  .entry .desc .hook .p-dot {
+    display: inline-block;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--c, #888);
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .entry .desc .hook .arrow { color: var(--text-4); margin: 0 4px; }
+  .entry .desc .hook .pp { color: var(--pos-fg); font-weight: 500; }
+  .entry .desc .hook .pp.zero { color: var(--text-4); font-weight: 400; }
+  .entry .pts {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--pos);
+    font-variant-numeric: tabular-nums;
+    padding-top: 1px;
+    white-space: nowrap;
+  }
+
+  /* skeleton */
+  .skel {
+    background: linear-gradient(90deg, var(--line-2), var(--line), var(--line-2));
+    background-size: 200% 100%;
+    animation: skel 1.4s ease-in-out infinite;
+    border-radius: 3px;
+  }
+  @keyframes skel { 0%{background-position: 100% 0} 100%{background-position:-100% 0} }
+
+  .err {
+    padding: 20px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--neg-fg);
+    background: var(--neg-bg);
+  }
+
+  /* footer */
+  .foot {
+    margin-top: 40px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-4);
+  }
+
+  /* accent corner marks — subtle editor ornament */
+  .corner {
+    position: absolute;
+    width: 10px; height: 10px;
+    pointer-events: none;
+    opacity: 0.9;
+  }
+  .corner.tl { top: -1px; left: -1px; border-top: 1px solid var(--rule); border-left: 1px solid var(--rule); }
+  .corner.tr { top: -1px; right: -1px; border-top: 1px solid var(--rule); border-right: 1px solid var(--rule); }
+  .corner.bl { bottom: -1px; left: -1px; border-bottom: 1px solid var(--rule); border-left: 1px solid var(--rule); }
+  .corner.br { bottom: -1px; right: -1px; border-bottom: 1px solid var(--rule); border-right: 1px solid var(--rule); }
+</style>
+<style type="text/css">button[data-v-7478eea2]:focus{outline:0}.TransIcon[data-v-7478eea2]{position:fixed !important;transition:all .2s linear;animation:fadeIn-7478eea2 .2s linear;z-index:999999999999999;filter:unset;width:34px;height:34px;border-radius:11px;border:1px solid #f1f1f1;overflow:hidden}.TransIcon img[data-v-7478eea2]{width:32px;height:32px;object-fit:cover;pointer-events:none}.TransIcon[data-v-7478eea2]:hover{cursor:pointer}.TransDialog[data-v-7478eea2]{position:fixed !important;animation:fadeIn-7478eea2 .2s linear;background:#fff;border-radius:16px;border:1px solid #f1f1f1;box-shadow:0px 8px 40px 0px rgba(0,0,0,.1);overflow:hidden;z-index:999999999999999}.TransDialog .dragBlock[data-v-7478eea2]{position:absolute;top:0;left:0;right:0}.TransDialog .dragBlock[data-v-7478eea2]:hover{cursor:move}.TransDialog .dragBlock .top-drap-block[data-v-7478eea2],.TransDialog .dragBlock .left-drap-block[data-v-7478eea2]{position:absolute;left:0}.TransDialog .dragBlock .top-drap-block[data-v-7478eea2]{right:0;height:15px}.TransDialog .dragBlock .left-drap-block[data-v-7478eea2]{height:55px;right:120px}.TransDialog .dragBlock.preview .left-drap-block[data-v-7478eea2]{width:20px;height:79px;right:160px}.TransDialog .dragBlock.scale .left-drap-block[data-v-7478eea2]{right:53px;left:177px;height:40px}.MOJiWebExtensionpanelObject[data-v-7478eea2]{height:100%;width:calc(100% + 5px);border:none;overflow:hidden;z-index:999999999999999}@keyframes fadeIn-7478eea2{from{opacity:0}to{opacity:1}}
+/*# sourceURL=webpack://src/components/TransDialog/App.vue */
+/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIndlYnBhY2s6Ly9zcmMvY29tcG9uZW50cy9UcmFuc0RpYWxvZy9BcHAudnVlIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUdBLDhCQUNFLFNBQUEsQ0FHRiw0QkFDRSx5QkFBQSxDQUNBLHlCQUFBLENBQ0Esb0NBQUEsQ0FHQSx1QkFYZSxDQVlmLFlBQUEsQ0FDQSxVQUFBLENBQ0EsV0FBQSxDQUNBLGtCQUFBLENBQ0Esd0JBQUEsQ0FDQSxlQUFBLENBQ0EsZ0NBQ0UsVUFBQSxDQUNBLFdBQUEsQ0FDQSxnQkFBQSxDQUNBLG1CQUFBLENBSUosa0NBQ0UsY0FBQSxDQUdGLDhCQUNFLHlCQUFBLENBRUEsb0NBQUEsQ0FHQSxlQUFBLENBQ0Esa0JBQUEsQ0FDQSx3QkFBQSxDQUVBLDBDQUFBLENBQ0EsZUFBQSxDQUNBLHVCQTFDZSxDQTJDZix5Q0FDRSxpQkFBQSxDQUNBLEtBQUEsQ0FDQSxNQUFBLENBQ0EsT0FBQSxDQUdBLCtDQUNFLFdBQUEsQ0FHRixtSEFDRSxpQkFBQSxDQUNBLE1BQUEsQ0FHRix5REFDRSxPQUFBLENBQ0EsV0FBQSxDQUVGLDBEQUNFLFdBQUEsQ0FDQSxXQUFBLENBS0Esa0VBQ0UsVUFBQSxDQUNBLFdBQUEsQ0FDQSxXQUFBLENBTUYsZ0VBQ0UsVUFBQSxDQUNBLFVBQUEsQ0FDQSxXQUFBLENBTVIsOENBQ0UsV0FBQSxDQUNBLHNCQUFBLENBQ0EsV0FBQSxDQUNBLGVBQUEsQ0FFQSx1QkE5RmUsQ0FxR2pCLDJCQUNFLEtBQ0UsU0FBQSxDQUVGLEdBQ0UsU0FBQSxDQUFBIiwic291cmNlc0NvbnRlbnQiOlsiQGltcG9ydCAnQC9zY3NzL3ZhcmlhYmxlcy5zY3NzJztcblxyXG4kZGlhbG9nLXotaW5kZXg6IDk5OTk5OTk5OTk5OTk5OTtcclxuYnV0dG9uOmZvY3VzIHtcclxuICBvdXRsaW5lOiAwO1xyXG59XHJcblxyXG4uVHJhbnNJY29uIHtcclxuICBwb3NpdGlvbjogZml4ZWQgIWltcG9ydGFudDtcclxuICB0cmFuc2l0aW9uOiBhbGwgMC4ycyBsaW5lYXI7XHJcbiAgYW5pbWF0aW9uOiBmYWRlSW4gMC4ycyBsaW5lYXI7XHJcbiAgLy8gd2lkdGg6IDI0cHg7XHJcbiAgLy8gaGVpZ2h0OiAyNHB4O1xyXG4gIHotaW5kZXg6ICRkaWFsb2ctei1pbmRleDtcclxuICBmaWx0ZXI6IHVuc2V0O1xyXG4gIHdpZHRoOiAzNHB4O1xyXG4gIGhlaWdodDogMzRweDtcclxuICBib3JkZXItcmFkaXVzOiAxMXB4O1xyXG4gIGJvcmRlcjogMXB4IHNvbGlkICNGMUYxRjE7XHJcbiAgb3ZlcmZsb3c6IGhpZGRlbjtcclxuICBpbWcge1xyXG4gICAgd2lkdGg6IDMycHg7XHJcbiAgICBoZWlnaHQ6IDMycHg7XHJcbiAgICBvYmplY3QtZml0OiBjb3ZlcjtcclxuICAgIHBvaW50ZXItZXZlbnRzOiBub25lO1xyXG4gIH1cclxufVxyXG5cclxuLlRyYW5zSWNvbjpob3ZlciB7XHJcbiAgY3Vyc29yOiBwb2ludGVyO1xyXG59XHJcblxyXG4uVHJhbnNEaWFsb2cge1xyXG4gIHBvc2l0aW9uOiBmaXhlZCAhaW1wb3J0YW50O1xyXG4gIC8vIHRyYW5zaXRpb246IGFsbCAwLjJzIGxpbmVhcjtcclxuICBhbmltYXRpb246IGZhZGVJbiAwLjJzIGxpbmVhcjtcclxuICAvLyB3aWR0aDogMzkycHg7XHJcbiAgLy8gaGVpZ2h0OiA0NDhweDtcclxuICBiYWNrZ3JvdW5kOiAjZmZmZmZmO1xyXG4gIGJvcmRlci1yYWRpdXM6IDE2cHg7XHJcbiAgYm9yZGVyOiAxcHggc29saWQgI2YxZjFmMTtcclxuICAvLyBvdmVyZmxvdzogYXV0bztcclxuICBib3gtc2hhZG93OiAwcHggOHB4IDQwcHggMHB4IHJnYmEoMCwgMCwgMCwgMC4xKTtcclxuICBvdmVyZmxvdzogaGlkZGVuO1xyXG4gIHotaW5kZXg6ICRkaWFsb2ctei1pbmRleDtcclxuICAuZHJhZ0Jsb2NrIHtcclxuICAgIHBvc2l0aW9uOiBhYnNvbHV0ZTtcclxuICAgIHRvcDowO1xyXG4gICAgbGVmdDogMDtcclxuICAgIHJpZ2h0OiAwO1xyXG4gICAgLy8gaGVpZ2h0OiA2MHB4O1xyXG5cclxuICAgICY6aG92ZXIge1xyXG4gICAgICBjdXJzb3I6IG1vdmU7XHJcbiAgICB9XHJcblxyXG4gICAgLnRvcC1kcmFwLWJsb2NrLCAubGVmdC1kcmFwLWJsb2NrIHtcclxuICAgICAgcG9zaXRpb246IGFic29sdXRlO1xyXG4gICAgICBsZWZ0OiAwO1xyXG4gICAgfVxyXG4gICAgLy8gZGVmYWx1bHRcclxuICAgIC50b3AtZHJhcC1ibG9jayB7XHJcbiAgICAgIHJpZ2h0OiAwO1xyXG4gICAgICBoZWlnaHQ6IDE1cHg7XHJcbiAgICB9XHJcbiAgICAubGVmdC1kcmFwLWJsb2NrIHtcclxuICAgICAgaGVpZ2h0OiA1NXB4O1xyXG4gICAgICByaWdodDogMTIwcHg7XHJcbiAgICB9XHJcblxyXG4gICAgLy8gcHJldmlld1xyXG4gICAgJi5wcmV2aWV3IHtcclxuICAgICAgLmxlZnQtZHJhcC1ibG9jayB7XHJcbiAgICAgICAgd2lkdGg6IDIwcHg7XHJcbiAgICAgICAgaGVpZ2h0OiA3OXB4O1xyXG4gICAgICAgIHJpZ2h0OiAxNjBweDtcclxuICAgICAgfVxyXG4gICAgfVxyXG5cclxuICAgIC8vIGRpYWxvZyB3aXRoIHNjYWxlXHJcbiAgICAmLnNjYWxlIHtcclxuICAgICAgLmxlZnQtZHJhcC1ibG9jayB7XHJcbiAgICAgICAgcmlnaHQ6IDUzcHg7XHJcbiAgICAgICAgbGVmdDogMTc3cHg7XHJcbiAgICAgICAgaGVpZ2h0OiA0MHB4O1xyXG4gICAgICB9XHJcbiAgICB9XHJcbiAgfVxyXG59XHJcblxyXG4uTU9KaVdlYkV4dGVuc2lvbnBhbmVsT2JqZWN0IHtcclxuICBoZWlnaHQ6IDEwMCU7XHJcbiAgd2lkdGg6IGNhbGMoMTAwJSArIDVweCk7XHJcbiAgYm9yZGVyOiBub25lO1xyXG4gIG92ZXJmbG93OiBoaWRkZW47XHJcbiAgLy8gYmFja2dyb3VuZDogI2ZmZmZmZjtcclxuICB6LWluZGV4OiAkZGlhbG9nLXotaW5kZXg7XHJcbiAgLy8g5LiN5pi+56S654Gr54uQaWZyYW1l55qE5rua5Yqo5p2hXHJcbiAgLy8gJi5maXJlZm94LW9iamVjdCB7XHJcbiAgLy8gICB3aWR0aDogY2FsYygxMDAlICsgMTVweCk7XHJcbiAgLy8gfVxyXG59XHJcblxyXG5Aa2V5ZnJhbWVzIGZhZGVJbiB7XHJcbiAgZnJvbSB7XHJcbiAgICBvcGFjaXR5OiAwO1xyXG4gIH1cclxuICB0byB7XHJcbiAgICBvcGFjaXR5OiAxO1xyXG4gIH1cclxufVxyXG4iXSwic291cmNlUm9vdCI6IiJ9 */</style><style data-id="immersive-translate-input-injected-css"></style></head>
+<body data-cc-id="cc-1" style="cursor: crosshair; background-color: rgb(236, 246, 250);">
+<div class="app" id="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <span>life</span><span class="slash">/</span><span>flow</span>
+      <span class="slash" style="margin-left:8px">v0.1</span>
+    </div>
+    <div class="topbar-meta">
+      <span class="item"><span class="k">updated</span> <span class="v" id="meta-updated">2026-04-20 16:00</span></span>
+      <span class="item"><span class="k">user</span> <span class="v" id="meta-user">吴昊</span></span>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- HERO -->
+    <section class="hero" style="position:relative">
+      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+
+      <div class="hero-main">
+        <div class="eyebrow">
+          <span>今日积分</span>
+          <span class="sep"></span>
+          <span class="mono">2026-04-20</span>
+        </div>
+        <div class="hero-number">
+          <span class="n">150</span>
+          <span class="unit">分</span>
+          <span class="delta-chip pos">↑ +30</span>
+        </div>
+        <div class="hero-sub">
+          <span class="badge pos">
+            <span class="arr">↑</span>
+            <span>比昨日多 30 分</span>
+          </span>
+          <span class="mono" style="color:var(--text-3);font-size:11px">
+            超过过往 <b class="tnum" style="color:var(--text);font-weight:500">68%</b> 天数
+          </span>
+        </div>
+
+        <!-- hero-state demo strip -->
+        <div class="statestrip" aria-label="徽章三态示意">
+          <div class="cell">
+            <span class="k">state · up</span>
+            <span class="badge pos"><span class="arr">↑</span><span>比昨日多 30 分</span></span>
+          </div>
+          <div class="cell">
+            <span class="k">state · down</span>
+            <span class="badge neg"><span class="arr">↓</span><span>比昨日少 10 分</span></span>
+          </div>
+          <div class="cell">
+            <span class="k">state · flat</span>
+            <span class="badge neu"><span class="arr">=</span><span>与昨日持平</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-side">
+        <div class="eyebrow">
+          <span>昨日</span>
+          <span class="sep"></span>
+          <span class="mono">2026-04-19</span>
+        </div>
+        <div class="y-n">120<span class="u">分</span></div>
+        <div class="rank">
+          历史排名 · 超过过往 <b class="tnum">68%</b> 天数
+        </div>
+        <div class="rankbar" aria-hidden="true">
+          <i style="width:68%"></i>
+          <span class="tick" style="left:68%"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATS -->
+    <section class="stats" aria-label="总览指标">
+      <div class="stat">
+        <div class="label">累计积分</div>
+        <div class="val"><span class="big">240</span><span class="small">分</span></div>
+      </div>
+      <div class="stat">
+        <div class="label">当前等级</div>
+        <div class="val">
+          <span class="big">Lv1</span>
+          <span class="small">史莱姆</span>
+        </div>
+        <div class="sublevel" aria-label="距下一级进度"><i style="width:48%"></i></div>
+        <div class="sublevel-caption">
+          <span>240 / 500</span>
+          <span>→ 冒险者</span>
+        </div>
+      </div>
+      <div class="stat">
+        <div class="label">连续打卡</div>
+        <div class="val"><span class="big">3</span><span class="small">天</span></div>
+        <div class="streak-dots" aria-hidden="true">
+          <i class=""></i><i class=""></i><i class=""></i><i class="ghost"></i><i class="ghost"></i><i class="ghost"></i><i class="ghost"></i>
+        </div>
+      </div>
+    </section>
+
+    <div class="belowhero">
+      <!-- PROJECTS -->
+      <section class="section">
+        <header class="section-head">
+          <div class="section-title"><span class="num">02</span><span>长期目标</span></div>
+          <div class="section-meta">7 项 · 按进度排序</div>
+        </header>
+        <div class="projects">
+          
+    <div class="project" style="--c:#7F77DD">
+      <div class="project-row1">
+        <span class="dot"></span>
+        <span class="name">知识库 v4</span>
+        <span class="pct tnum">85%</span>
+        <span class="delta zero">+0%</span>
+      </div>
+      <div class="track " aria-hidden="true">
+        
+          <span class="fill" style="width:85%"></span>
+          
+        
+      </div>
+      <div class="project-row3">
+        <span class="cat">learning</span>
+        <span class="today-inc">
+          今日无变动
+        </span>
+      </div>
+    </div>
+  
+    <div class="project" style="--c:#BA7517">
+      <div class="project-row1">
+        <span class="dot"></span>
+        <span class="name">Lv4 骑士 (等级路线)</span>
+        <span class="pct tnum">73%</span>
+        <span class="delta ">+1%</span>
+      </div>
+      <div class="track " aria-hidden="true">
+        
+          <span class="fill" style="width:73%"></span>
+          <span class="inc" style="left:72%;width:1%"></span>
+        
+      </div>
+      <div class="project-row3">
+        <span class="cat">gamification</span>
+        <span class="today-inc">
+          今日推进 <b>+1%</b>
+        </span>
+      </div>
+    </div>
+  
+    <div class="project" style="--c:#BA7517">
+      <div class="project-row1">
+        <span class="dot"></span>
+        <span class="name">积分 streak</span>
+        <span class="pct tnum">29%</span>
+        <span class="delta ">+1%</span>
+      </div>
+      <div class="track " aria-hidden="true">
+        
+          <span class="fill" style="width:29%"></span>
+          <span class="inc" style="left:28%;width:1%"></span>
+        
+      </div>
+      <div class="project-row3">
+        <span class="cat">gamification</span>
+        <span class="today-inc">
+          今日推进 <b>+1%</b>
+        </span>
+      </div>
+    </div>
+  
+    <div class="project" style="--c:#378ADD">
+      <div class="project-row1">
+        <span class="dot"></span>
+        <span class="name">日语 N1</span>
+        <span class="pct tnum">25%</span>
+        <span class="delta ">+0.5%</span>
+      </div>
+      <div class="track " aria-hidden="true">
+        
+          <span class="fill" style="width:25%"></span>
+          <span class="inc" style="left:24.5%;width:0.5%"></span>
+        
+      </div>
+      <div class="project-row3">
+        <span class="cat">learning</span>
+        <span class="today-inc">
+          今日推进 <b>+0.5%</b>
+        </span>
+      </div>
+    </div>
+  
+    <div class="project" style="--c:#1D9E75">
+      <div class="project-row1">
+        <span class="dot"></span>
+        <span class="name">CLSBiOGate 主论文</span>
+        <span class="pct tnum">15%</span>
+        <span class="delta ">+1%</span>
+      </div>
+      <div class="track " aria-hidden="true">
+        
+          <span class="fill" style="width:15%"></span>
+          <span class="inc" style="left:14%;width:1%"></span>
+        
+      </div>
+      <div class="project-row3">
+        <span class="cat">research</span>
+        <span class="today-inc">
+          今日推进 <b>+1%</b>
+        </span>
+      </div>
+    </div>
+  
+    <div class="project" style="--c:#639922">
+      <div class="project-row1">
+        <span class="dot"></span>
+        <span class="name">跑步减肥</span>
+        <span class="pct tnum">10%</span>
+        <span class="delta ">+2%</span>
+      </div>
+      <div class="track " aria-hidden="true">
+        
+          <span class="fill" style="width:10%"></span>
+          <span class="inc" style="left:8%;width:2%"></span>
+        
+      </div>
+      <div class="project-row3">
+        <span class="cat">health</span>
+        <span class="today-inc">
+          今日推进 <b>+2%</b>
+        </span>
+      </div>
+    </div>
+  
+    <div class="project" style="--c:#D4537E">
+      <div class="project-row1">
+        <span class="dot"></span>
+        <span class="name">外在形象管理</span>
+        <span class="pct tnum">0%</span>
+        <span class="delta zero">+0%</span>
+      </div>
+      <div class="track zero" aria-hidden="true">
+        
+      </div>
+      <div class="project-row3">
+        <span class="cat">lifestyle</span>
+        <span class="today-inc">
+          待启程
+        </span>
+      </div>
+    </div>
+  
+        </div>
+      </section>
+
+      <!-- ENTRIES -->
+      <section class="section">
+        <header class="section-head">
+          <div class="section-title"><span class="num">03</span><span>今日明细</span></div>
+          <div class="section-meta">4 条 · 150 分</div>
+        </header>
+        <div class="entries">
+          
+    <div class="entry">
+      <div class="t">09:30</div>
+      <div class="desc">
+        跑步 30 分钟
+        <span class="hook">
+          <span class="p-dot" style="background:#639922"></span>跑步减肥
+          <span class="arrow">→</span>
+          <span class="pp">+2%</span>
+        </span>
+      </div>
+      <div class="pts">+50</div>
+    </div>
+  
+    <div class="entry">
+      <div class="t">10:30</div>
+      <div class="desc">
+        论文阅读 · BRCA survival 调研
+        <span class="hook">
+          <span class="p-dot" style="background:#1D9E75"></span>CLSBiOGate 主论文
+          <span class="arrow">→</span>
+          <span class="pp">+1%</span>
+        </span>
+      </div>
+      <div class="pts">+50</div>
+    </div>
+  
+    <div class="entry">
+      <div class="t">14:00</div>
+      <div class="desc">
+        日语背单词 50 个
+        <span class="hook">
+          <span class="p-dot" style="background:#378ADD"></span>日语 N1
+          <span class="arrow">→</span>
+          <span class="pp">+0.5%</span>
+        </span>
+      </div>
+      <div class="pts">+30</div>
+    </div>
+  
+    <div class="entry">
+      <div class="t">16:00</div>
+      <div class="desc">
+        知识库 v4 · 新增 1 条生活感悟
+        <span class="hook">
+          <span class="p-dot" style="background:#7F77DD"></span>知识库 v4
+          <span class="arrow">→</span>
+          <span class="pp zero">+0%</span>
+        </span>
+      </div>
+      <div class="pts">+20</div>
+    </div>
+  
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <span>flow.wu-happy.com</span>
+    <span>editor · v0.1</span>
+  </footer>
+</div>
+
+<script>
+(async function () {
+  const main = document.getElementById('main');
+  // skeleton
+  main.innerHTML = `
+    <section class="hero" style="position:relative">
+      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+      <div class="hero-main">
+        <div class="skel" style="width:160px;height:10px"></div>
+        <div class="skel" style="width:180px;height:72px;margin-top:14px;border-radius:4px"></div>
+        <div class="skel" style="width:140px;height:22px;margin-top:18px;border-radius:999px"></div>
+      </div>
+      <div class="hero-side">
+        <div class="skel" style="width:60px;height:10px"></div>
+        <div class="skel" style="width:80px;height:22px;margin-top:10px"></div>
+        <div class="skel" style="width:120px;height:10px;margin-top:16px"></div>
+      </div>
+    </section>
+  `;
+
+  let data;
+  try {
+    const r = await fetch('./data.json', { cache: 'no-store' });
+    if (!r.ok) throw new Error('http ' + r.status);
+    data = await r.json();
+  } catch (e) {
+    main.innerHTML = `<div class="err">无法加载 data.json · ${e.message} · 请检查同目录下是否存在该文件</div>`;
+    return;
+  }
+
+  render(data);
+})();
+
+function fmtDate(iso) {
+  // "2026-04-20" → "2026-04-20"
+  return iso;
+}
+function fmtUpdated(iso) {
+  try {
+    const d = new Date(iso);
+    const pad = n => String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  } catch { return iso; }
+}
+
+function deltaState(today, yest) {
+  if (today > yest) return { kind: 'pos', arr: '↑', text: `比昨日多 ${today - yest} 分`, chip: `+${today - yest}` };
+  if (today < yest) return { kind: 'neg', arr: '↓', text: `比昨日少 ${yest - today} 分`, chip: `−${yest - today}` };
+  return { kind: 'neu', arr: '=', text: '与昨日持平', chip: '±0' };
+}
+
+function render(data) {
+  const main = document.getElementById('main');
+
+  document.getElementById('meta-updated').textContent = fmtUpdated(data.updated_at);
+  document.getElementById('meta-user').textContent = data.user.name;
+
+  const { today, yesterday, user, projects } = data;
+  const d = deltaState(today.points, yesterday.points);
+
+  const sortedProjects = [...projects].sort((a,b) => b.pct - a.pct);
+
+  // level progress: 240/ (240+260) = 48%
+  const levelPct = Math.round(user.total_points * 100 / (user.total_points + user.points_to_next_level));
+
+  const totalEntries = today.entries.length;
+
+  main.innerHTML = `
+    <!-- HERO -->
+    <section class="hero" style="position:relative">
+      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+
+      <div class="hero-main">
+        <div class="eyebrow">
+          <span>今日积分</span>
+          <span class="sep"></span>
+          <span class="mono">${fmtDate(today.date)}</span>
+        </div>
+        <div class="hero-number">
+          <span class="n">${today.points}</span>
+          <span class="unit">分</span>
+          <span class="delta-chip ${d.kind}">${d.arr} ${d.chip}</span>
+        </div>
+        <div class="hero-sub">
+          <span class="badge ${d.kind}">
+            <span class="arr">${d.arr}</span>
+            <span>${d.text}</span>
+          </span>
+          <span class="mono" style="color:var(--text-3);font-size:11px">
+            超过过往 <b class="tnum" style="color:var(--text);font-weight:500">${today.rank_pct}%</b> 天数
+          </span>
+        </div>
+
+        <!-- hero-state demo strip -->
+        <div class="statestrip" aria-label="徽章三态示意">
+          <div class="cell">
+            <span class="k">state · up</span>
+            <span class="badge pos"><span class="arr">↑</span><span>比昨日多 30 分</span></span>
+          </div>
+          <div class="cell">
+            <span class="k">state · down</span>
+            <span class="badge neg"><span class="arr">↓</span><span>比昨日少 10 分</span></span>
+          </div>
+          <div class="cell">
+            <span class="k">state · flat</span>
+            <span class="badge neu"><span class="arr">=</span><span>与昨日持平</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-side">
+        <div class="eyebrow">
+          <span>昨日</span>
+          <span class="sep"></span>
+          <span class="mono">${fmtDate(yesterday.date)}</span>
+        </div>
+        <div class="y-n">${yesterday.points}<span class="u">分</span></div>
+        <div class="rank">
+          历史排名 · 超过过往 <b class="tnum">${today.rank_pct}%</b> 天数
+        </div>
+        <div class="rankbar" aria-hidden="true">
+          <i style="width:${today.rank_pct}%"></i>
+          <span class="tick" style="left:${today.rank_pct}%"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATS -->
+    <section class="stats" aria-label="总览指标">
+      <div class="stat">
+        <div class="label">累计积分</div>
+        <div class="val"><span class="big">${user.total_points}</span><span class="small">分</span></div>
+      </div>
+      <div class="stat">
+        <div class="label">当前等级</div>
+        <div class="val">
+          <span class="big">Lv${user.level}</span>
+          <span class="small">${user.level_name}</span>
+        </div>
+        <div class="sublevel" aria-label="距下一级进度"><i style="width:${levelPct}%"></i></div>
+        <div class="sublevel-caption">
+          <span>${user.total_points} / ${user.total_points + user.points_to_next_level}</span>
+          <span>→ ${user.next_level_name}</span>
+        </div>
+      </div>
+      <div class="stat">
+        <div class="label">连续打卡</div>
+        <div class="val"><span class="big">${user.streak_days}</span><span class="small">天</span></div>
+        <div class="streak-dots" aria-hidden="true">
+          ${Array.from({length: 7}).map((_,i) =>
+            `<i class="${i < user.streak_days ? '' : 'ghost'}"></i>`
+          ).join('')}
+        </div>
+      </div>
+    </section>
+
+    <div class="belowhero">
+      <!-- PROJECTS -->
+      <section class="section">
+        <header class="section-head">
+          <div class="section-title"><span class="num">02</span><span>长期目标</span></div>
+          <div class="section-meta">${projects.length} 项 · 按进度排序</div>
+        </header>
+        <div class="projects">
+          ${sortedProjects.map(p => renderProject(p)).join('')}
+        </div>
+      </section>
+
+      <!-- ENTRIES -->
+      <section class="section">
+        <header class="section-head">
+          <div class="section-title"><span class="num">03</span><span>今日明细</span></div>
+          <div class="section-meta">${totalEntries} 条 · ${today.points} 分</div>
+        </header>
+        <div class="entries">
+          ${today.entries.map(e => renderEntry(e, projects)).join('')}
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function renderProject(p) {
+  const zero = p.pct === 0;
+  const delta = p.today_delta_pct;
+  const prev = Math.max(0, p.pct - delta);
+  const incWidthPct = Math.max(0, delta);
+  const startPct = prev;
+
+  return `
+    <div class="project" style="--c:${p.color}">
+      <div class="project-row1">
+        <span class="dot"></span>
+        <span class="name">${escapeHtml(p.name)}</span>
+        <span class="pct tnum">${fmtPct(p.pct)}%</span>
+        <span class="delta ${delta > 0 ? '' : 'zero'}">+${fmtPct(delta)}%</span>
+      </div>
+      <div class="track ${zero ? 'zero' : ''}" aria-hidden="true">
+        ${zero ? '' : `
+          <span class="fill" style="width:${p.pct}%"></span>
+          ${delta > 0 ? `<span class="inc" style="left:${startPct}%;width:${incWidthPct}%"></span>` : ''}
+        `}
+      </div>
+      <div class="project-row3">
+        <span class="cat">${p.category}</span>
+        <span class="today-inc">
+          ${zero ? '待启程'
+            : (delta > 0 ? `今日推进 <b>+${fmtPct(delta)}%</b>` : '今日无变动')}
+        </span>
+      </div>
+    </div>
+  `;
+}
+
+function renderEntry(e, projects) {
+  const p = projects.find(x => x.id === e.project_id);
+  const pname = p ? p.name : e.project_id;
+  const color = p ? p.color : '#888';
+  const showDelta = e.project_delta_pct > 0;
+  const deltaStr = fmtPct(e.project_delta_pct);
+  return `
+    <div class="entry">
+      <div class="t">${e.time}</div>
+      <div class="desc">
+        ${escapeHtml(e.task)}
+        <span class="hook">
+          <span class="p-dot" style="background:${color}"></span>${escapeHtml(pname)}
+          <span class="arrow">→</span>
+          ${showDelta
+            ? `<span class="pp">+${deltaStr}%</span>`
+            : `<span class="pp zero">+0%</span>`}
+        </span>
+      </div>
+      <div class="pts">+${e.points}</div>
+    </div>
+  `;
+}
+
+function fmtPct(n) {
+  if (n === 0) return '0';
+  if (Number.isInteger(n)) return String(n);
+  // strip trailing zeros
+  return (Math.round(n * 10) / 10).toString();
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+</script>
+
+
+</body></html>

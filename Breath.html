@@ -213,6 +213,21 @@
     color: var(--text-3);
   }
   .rank-text b { color: var(--text); font-weight: 500; }
+  .hero-number .cum {
+    margin-left: 12px;
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    align-self: center;
+    white-space: nowrap;
+  }
+  .hero-number .cum b {
+    color: var(--text-2);
+    font-weight: 500;
+  }
 
   .hero-side {
     padding-top: 8px;
@@ -258,21 +273,61 @@
     margin-bottom: 8px;
   }
   .percentile-label b { color: var(--text); font-weight: 500; }
+  .rdelta { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 500; letter-spacing: 0; }
+  .rdelta.pos { color: var(--pos-fg); }
+  .rdelta.neg { color: var(--neg-fg); }
+  .rdelta.neu { color: var(--text-3); }
+  .percentile-caption {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-4);
+    letter-spacing: 0.04em;
+    margin-top: 8px;
+  }
   .bins {
     display: flex;
-    gap: 3px;
+    gap: 6px;
     align-items: end;
-    height: 28px;
+    height: 64px;
+    padding: 0 2px;
   }
-  .bins i {
+  .bins .bar {
     flex: 1;
-    background: var(--track);
-    border-radius: 1px;
-    min-height: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
   }
-  .bins i.active {
+  .bins .bar .v {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    color: var(--text-4);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+    line-height: 1;
+    height: 11px;
+  }
+  .bins .bar.today .v { color: var(--text-2); font-weight: 500; }
+  .bins .bar .col {
+    width: 100%;
+    background: var(--track);
+    border-radius: 2px;
+    min-height: 3px;
+    transition: background .2s ease;
+  }
+  .bins .bar.today .col {
     background: var(--text);
   }
+  .bins .bar .d {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-4);
+    letter-spacing: 0.02em;
+    line-height: 1;
+    height: 10px;
+  }
+  .bins .bar.today .d { color: var(--text-2); font-weight: 500; }
 
   /* ======================= */
   /* Hero-state demo strip   */
@@ -306,6 +361,9 @@
     padding-bottom: 40px;
     border-bottom: 1px solid var(--line);
   }
+  .stats.single { grid-template-columns: 1fr; }
+  .stats.single .stat { padding: 0; border-right: 0; }
+  .stats.single .stat .val { justify-content: flex-start; }
   @media (min-width: 768px) { .stats { margin-top: 40px; padding-bottom: 56px; } }
   .stat { padding: 0 20px; border-right: 1px solid var(--line); }
   .stat:first-child { padding-left: 0; }
@@ -373,6 +431,26 @@
     justify-content: space-between;
     margin-bottom: 28px;
   }
+  .entries-head {
+    cursor: pointer;
+    user-select: none;
+    transition: opacity .15s ease;
+  }
+  .entries-head:hover { opacity: 0.75; }
+  .chev-sec {
+    display: inline-block;
+    color: var(--text-3);
+    margin-right: 6px;
+    font-size: 11px;
+    transition: transform .2s ease;
+    transform-origin: center;
+  }
+  #entries-section.collapsed .chev-sec { transform: rotate(-90deg); }
+  #entries-section.collapsed #entries-list { display: none; }
+  #entries-section.collapsed .section-head { margin-bottom: 0; }
+  #projects-section.collapsed .chev-sec { transform: rotate(-90deg); }
+  #projects-section.collapsed #projects-list { display: none; }
+  #projects-section.collapsed .section-head { margin-bottom: 0; }
   .section-title {
     font-family: var(--sans);
     font-size: 16px;
@@ -401,7 +479,7 @@
   }
 
   /* ======================= */
-  /* Focus-window bar        */
+  /* Focus-window bar (heat) */
   /* ======================= */
   .focus-bar {
     margin-top: 32px;
@@ -415,6 +493,7 @@
     justify-content: space-between;
     gap: 12px;
     margin-bottom: 14px;
+    flex-wrap: wrap;
   }
   .focus-bar .title {
     font-family: var(--mono);
@@ -438,44 +517,73 @@
     0%, 100% { box-shadow: 0 0 0 3px color-mix(in oklch, var(--pos) 22%, transparent); }
     50% { box-shadow: 0 0 0 5px color-mix(in oklch, var(--pos) 8%, transparent); }
   }
-  .focus-bar .remaining {
+  .focus-bar .util {
     font-family: var(--mono);
-    font-size: 13px;
+    font-size: 12.5px;
     color: var(--text-2);
     font-variant-numeric: tabular-nums;
+    display: inline-flex;
+    gap: 14px;
+    flex-wrap: wrap;
   }
-  .focus-bar .remaining b {
-    color: var(--text);
-    font-weight: 500;
+  .focus-bar .util b { color: var(--text); font-weight: 500; }
+  .focus-bar .util .sep { color: var(--text-4); }
+  .focus-bar .util .util-item .k {
+    color: var(--text-4);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-right: 4px;
   }
-  .focus-bar .remaining .pct {
-    color: var(--text-3);
-    margin-left: 8px;
-    padding-left: 8px;
-    border-left: 1px solid var(--line);
-  }
+
   .focus-track {
     position: relative;
-    height: 6px;
-    background: var(--track);
-    border-radius: 3px;
+    height: 32px;
+    background: var(--track-ghost);
+    border-radius: 4px;
     overflow: hidden;
   }
-  .focus-track .used {
-    position: absolute; inset: 0 auto 0 0;
-    background: var(--text);
-    opacity: 0.88;
+  .focus-track .elapsed {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: var(--track);
   }
-  .focus-track .used.ended {
-    background: var(--text-4);
+  .focus-track .seg {
+    position: absolute; top: 0; bottom: 0;
+    background: var(--c);
+    opacity: var(--o, 0.9);
+  }
+  .focus-track .seg.live {
+    background:
+      repeating-linear-gradient(
+        135deg,
+        var(--c) 0 8px,
+        color-mix(in oklch, var(--c) 75%, white 25%) 8px 16px
+      );
+    animation: stripe 1.4s linear infinite;
+  }
+  @media (prefers-color-scheme: dark) {
+    .focus-track .seg.live {
+      background:
+        repeating-linear-gradient(
+          135deg,
+          var(--c) 0 8px,
+          color-mix(in oklch, var(--c) 70%, black 30%) 8px 16px
+        );
+    }
+  }
+  @keyframes stripe {
+    0%   { background-position: 0 0; }
+    100% { background-position: 45px 0; }
   }
   .focus-track .now {
-    position: absolute; top: -3px; bottom: -3px;
+    position: absolute; top: -4px; bottom: -4px;
     width: 2px;
-    background: var(--pos);
+    background: var(--text);
     border-radius: 1px;
+    box-shadow: 0 0 0 2px var(--bg);
+    z-index: 2;
   }
-  .focus-track .now.ended, .focus-track .now.pre { display: none; }
+  .focus-track .now.ended, .focus-track .now.pre { opacity: 0.4; }
   .focus-axis {
     display: flex;
     justify-content: space-between;
@@ -486,6 +594,768 @@
     letter-spacing: 0.04em;
   }
   .focus-axis .mid { color: var(--text-3); }
+
+  .focus-legend {
+    display: flex;
+    gap: 14px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-3);
+  }
+  .focus-legend .lg {
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .focus-legend .sw {
+    width: 9px; height: 9px; border-radius: 2px;
+    display: inline-block;
+  }
+
+  /* ======================= */
+  /* Floating Focus Timer    */
+  /* ======================= */
+  .ft-fab {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 40;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: transform .12s ease, border-color .12s ease;
+  }
+  .ft-fab:hover { border-color: var(--text-3); transform: translateY(-1px); }
+  .ft-fab .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--text-3);
+  }
+  .ft-fab.running .dot {
+    background: var(--pos);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  .ft-fab .ft-elapsed { font-variant-numeric: tabular-nums; font-weight: 500; }
+
+  .ft-panel {
+    position: fixed;
+    inset: 0;
+    z-index: 41;
+    background: rgba(12, 13, 16, 0.32);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    transition: opacity .22s ease;
+  }
+  @media (prefers-color-scheme: light) {
+    .ft-panel { background: rgba(240, 238, 232, 0.4); }
+  }
+  .ft-panel.open { display: flex; opacity: 1; }
+  .ft-panel .ft-card {
+    width: 580px;
+    max-width: 100%;
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+    background: color-mix(in oklch, var(--surface) 78%, transparent);
+    border: 1px solid color-mix(in oklch, var(--line) 80%, transparent);
+    border-radius: 18px;
+    box-shadow:
+      0 24px 80px rgba(0,0,0,0.18),
+      0 6px 20px rgba(0,0,0,0.08),
+      inset 0 1px 0 rgba(255,255,255,0.5);
+    font-family: var(--sans);
+    overflow-x: hidden;
+    transform: scale(0.96) translateY(10px);
+    transition: transform .32s cubic-bezier(.16,1.2,.3,1);
+    backdrop-filter: blur(30px) saturate(1.6);
+    -webkit-backdrop-filter: blur(30px) saturate(1.6);
+  }
+  @media (prefers-color-scheme: dark) {
+    .ft-panel .ft-card {
+      box-shadow:
+        0 32px 100px rgba(0,0,0,0.6),
+        0 8px 24px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.06);
+      background: color-mix(in oklch, var(--surface) 82%, transparent);
+    }
+  }
+  .ft-panel.open .ft-card { transform: scale(1) translateY(0); }
+  .ft-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--line-2);
+  }
+  .ft-head .t {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .ft-head .x {
+    all: unset;
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: var(--text-3);
+    font-size: 16px;
+    line-height: 1;
+  }
+  .ft-head .x:hover { background: var(--track-ghost); color: var(--text); }
+  .ft-body { padding: 22px 32px 28px; }
+  .ft-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 22px;
+    margin-top: 22px;
+  }
+  .ft-grid .ft-field { margin-bottom: 0; }
+  .ft-grid .span-2 { grid-column: 1 / -1; }
+
+  /* Duration chips + number input */
+  .ft-duration {
+    display: flex;
+    gap: 6px;
+    align-items: stretch;
+  }
+  .ft-duration .chips {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+  }
+  .ft-duration .chip.reset {
+    color: var(--text-3);
+    font-family: var(--sans);
+    font-size: 11.5px;
+    letter-spacing: 0.02em;
+  }
+  .ft-duration .chip.reset.active {
+    background: var(--track-ghost);
+    color: var(--text);
+    border-color: var(--line);
+  }
+  .ft-duration .chip.reset:not(.active):hover { color: var(--text); }
+  .ft-duration .chip {
+    all: unset;
+    flex: 1;
+    text-align: center;
+    padding: 8px 0;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-2);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color .15s ease, color .15s ease, background .15s ease;
+  }
+  .ft-duration .chip:hover { border-color: var(--text-3); color: var(--text); }
+  .ft-duration .chip.active {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+  .ft-duration input {
+    width: 58px;
+    padding: 6px 8px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+  .ft-duration input:focus { outline: none; border-color: var(--text-3); }
+
+  /* Clarity tier tiles */
+  .ft-clarity-tiles {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .ft-tile {
+    all: unset;
+    cursor: pointer;
+    padding: 9px 6px 8px;
+    border-radius: 7px;
+    text-align: center;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    transition: border-color .15s ease, background .2s ease, transform .15s ease;
+    position: relative;
+  }
+  .ft-tile:hover { border-color: var(--text-3); }
+  .ft-tile .tile-sw {
+    display: block;
+    width: 100%;
+    height: 6px;
+    border-radius: 2px;
+    background: var(--c, var(--track));
+    margin-bottom: 7px;
+    opacity: 0.65;
+    transition: opacity .15s ease, height .2s ease;
+  }
+  .ft-tile .tile-label {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-2);
+    letter-spacing: -0.003em;
+    display: block;
+    line-height: 1.25;
+  }
+  .ft-tile .tile-range {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    color: var(--text-4);
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+    display: block;
+  }
+  .ft-tile.active {
+    border-color: var(--c);
+    background: color-mix(in oklch, var(--c) 8%, var(--surface));
+    box-shadow: 0 0 0 2px color-mix(in oklch, var(--c) 28%, transparent);
+  }
+  .ft-tile.active .tile-sw { opacity: 1; height: 8px; }
+  .ft-tile.active .tile-label { color: var(--text); }
+
+  /* Primary button — big and hero */
+  .ft-cta-wrap {
+    margin-top: 26px;
+    display: flex;
+    gap: 10px;
+  }
+  .ft-cta {
+    all: unset;
+    flex: 1;
+    text-align: center;
+    padding: 15px 20px;
+    font-family: var(--sans);
+    font-size: 14.5px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    border-radius: 10px;
+    cursor: pointer;
+    background: var(--text);
+    color: var(--bg);
+    transition: transform .12s ease, opacity .15s ease, box-shadow .2s ease;
+    box-shadow: 0 4px 12px color-mix(in oklch, var(--text) 18%, transparent);
+  }
+  .ft-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 16px color-mix(in oklch, var(--text) 22%, transparent); }
+  .ft-cta:active { transform: translateY(0); }
+  .ft-cta .cta-sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 400;
+    opacity: 0.6;
+    margin-left: 8px;
+    letter-spacing: 0.04em;
+  }
+
+  /* Session meta strip (running state) */
+  .ft-meta-strip {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 16px;
+    padding: 0 8px;
+    text-align: center;
+  }
+  .ft-meta-strip .k { color: var(--text-4); margin-right: 4px; }
+  .ft-meta-strip b { color: var(--text-2); font-weight: 500; }
+  .ft-meta-strip .sep { color: var(--text-4); }
+  .ft-mode-switch {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background: color-mix(in oklch, var(--track-ghost) 90%, transparent);
+    border-radius: 999px;
+    margin: 0 auto 18px;
+    width: fit-content;
+    border: 1px solid color-mix(in oklch, var(--line) 60%, transparent);
+  }
+  .ft-mode-switch button {
+    all: unset;
+    text-align: center;
+    padding: 8px 22px;
+    font-family: var(--sans);
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    color: var(--text-3);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color .2s ease, background .28s cubic-bezier(.16,1.2,.3,1);
+  }
+  .ft-mode-switch button.active {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.04);
+  }
+  .ft-field { margin-bottom: 12px; }
+  .ft-field .label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 6px;
+  }
+  .ft-field .label .val { color: var(--text); font-size: 12px; text-transform: none; letter-spacing: 0; }
+  .ft-field input[type="number"],
+  .ft-field input[type="text"],
+  .ft-field select {
+    width: 100%;
+    padding: 8px 10px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  .ft-field input:focus, .ft-field select:focus { outline: none; border-color: var(--text-3); }
+  .ft-field .hint {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-4);
+    margin-top: 5px;
+  }
+  .ft-slider {
+    -webkit-appearance: none; appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--track);
+    border-radius: 2px;
+    outline: none;
+    margin: 2px 0;
+  }
+  .ft-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--text);
+    cursor: pointer;
+    border: 2px solid var(--surface);
+    box-shadow: 0 0 0 1px var(--text-3);
+  }
+  .ft-slider::-moz-range-thumb {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--text);
+    cursor: pointer;
+    border: 2px solid var(--surface);
+    box-shadow: 0 0 0 1px var(--text-3);
+  }
+  .ft-clarity-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    background: var(--c, var(--track));
+    color: white;
+    font-weight: 500;
+  }
+  @media (prefers-color-scheme: light) {
+    .ft-clarity-chip { color: #fff; text-shadow: 0 0 1px rgba(0,0,0,.25); }
+  }
+
+  .ft-bigtime {
+    text-align: center;
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 38px;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    padding: 8px 0 6px;
+  }
+  .ft-bigtime .sub {
+    display: block;
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 4px;
+    font-weight: 400;
+  }
+  .ft-ring-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 14px 0 4px;
+  }
+  .ft-ring {
+    position: relative;
+    width: 220px;
+    height: 220px;
+  }
+  .ft-ring svg {
+    width: 100%; height: 100%;
+    transform: rotate(-90deg);
+  }
+  .ft-ring .track-c {
+    fill: none;
+    stroke: var(--track);
+    stroke-width: 6;
+  }
+  .ft-ring .prog-c {
+    fill: none;
+    stroke: var(--c, var(--text));
+    stroke-width: 6;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.9s linear, stroke 0.4s ease;
+  }
+  .ft-ring.breath .prog-c {
+    animation: ftbreath 3.4s ease-in-out infinite;
+  }
+  @keyframes ftbreath {
+    0%, 100% { opacity: 0.55; }
+    50%      { opacity: 1; }
+  }
+  .ft-ring .center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+  }
+  .ft-ring .big {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 46px;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .ft-ring.setup .big { font-size: 44px; color: var(--text-2); }
+  .ft-ring.setup { cursor: grab; touch-action: none; user-select: none; }
+  .ft-ring.setup.dragging { cursor: grabbing; }
+  .ft-ring .handle {
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15));
+    transition: r .15s ease;
+  }
+  .ft-ring.setup.dragging .handle { r: 8; }
+  /* subtle hint pulse on the empty ring to tell user "draggable" */
+  .ft-ring.setup.draggable-empty .track-c {
+    stroke-dasharray: 2 6;
+    stroke-width: 4;
+    animation: dragHint 2.8s ease-in-out infinite;
+  }
+  @keyframes dragHint {
+    0%, 100% { opacity: 0.35; }
+    50%      { opacity: 0.7; }
+  }
+  .ft-ring .sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+  /* Ring top slot: session name (editable) — mimics phone-lock-screen timer */
+  .ft-ring .name-slot {
+    position: absolute;
+    top: 36px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-2);
+    letter-spacing: -0.005em;
+    max-width: 70%;
+    white-space: nowrap;
+    cursor: text;
+    padding: 3px 8px;
+    border-radius: 5px;
+    transition: background .15s ease, color .15s ease;
+    z-index: 2;
+  }
+  .ft-ring .name-slot:hover { background: var(--track-ghost); color: var(--text); }
+  .ft-ring .name-slot.empty { color: var(--text-4); font-weight: 400; }
+  .ft-ring .name-slot.empty::before { content: "+ "; margin-right: 1px; }
+  .ft-ring .name-slot input {
+    all: unset;
+    font: inherit;
+    color: var(--text);
+    text-align: center;
+    width: 100%;
+    min-width: 80px;
+  }
+  .ft-ring .name-slot.editing { background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); cursor: text; }
+  .ft-ring .name-slot.editing::before { content: none; }
+
+  /* Clarity gradient slider (replaces 4-tile grid) */
+  .ft-clarity-gradient {
+    position: relative;
+    padding: 14px 4px 6px;
+  }
+  .ft-clarity-gradient .track {
+    position: relative;
+    height: 10px;
+    border-radius: 5px;
+    background: linear-gradient(
+      to right,
+      oklch(66% 0.18 35) 0%,
+      oklch(72% 0.15 85) 40%,
+      oklch(72% 0.14 150) 60%,
+      oklch(72% 0.13 220) 100%
+    );
+    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--text) 6%, transparent);
+    cursor: pointer;
+  }
+  .ft-clarity-gradient .thumb {
+    position: absolute;
+    top: 50%;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 3px solid var(--c, var(--text));
+    transform: translate(-50%, -50%);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.18), 0 0 0 1px color-mix(in oklch, var(--text) 8%, transparent);
+    pointer-events: none;
+    transition: border-color .2s ease;
+  }
+  .ft-clarity-gradient .ticks {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    padding: 0 2px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    color: var(--text-4);
+    letter-spacing: 0.06em;
+  }
+  .ft-clarity-gradient .ticks span { position: relative; }
+  .ft-clarity-gradient .ticks span.active { color: var(--text); }
+
+  /* Insights list (in-run "心得" module) */
+  .ft-insights {
+    margin-top: 18px;
+    padding: 14px 16px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  .ft-insights .hdr {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .ft-insights .hdr .t {
+    font-family: var(--sans); font-size: 12px; font-weight: 500;
+    color: var(--text-2); letter-spacing: -0.003em;
+  }
+  .ft-insights .hdr .count {
+    font-family: var(--mono); font-size: 10.5px; color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .ft-insights .items { display: flex; flex-direction: column; gap: 6px; }
+  .ft-insights .item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px;
+    background: var(--surface);
+    border: 1px solid var(--line-2);
+    border-radius: 7px;
+    font-size: 12.5px;
+    font-family: var(--sans);
+    color: var(--text);
+  }
+  .ft-insights .item .txt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ft-insights .item .pts {
+    font-family: var(--mono); font-variant-numeric: tabular-nums;
+    font-size: 11px; color: var(--pos-fg);
+    background: var(--pos-bg); padding: 2px 7px; border-radius: 999px;
+    flex-shrink: 0;
+  }
+  .ft-insights .item .proj {
+    font-family: var(--mono); font-size: 10px; color: var(--text-3);
+    letter-spacing: 0.04em; flex-shrink: 0;
+    max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .ft-insights .item .del {
+    all: unset; cursor: pointer;
+    color: var(--text-4); font-size: 13px;
+    padding: 0 2px; line-height: 1;
+    flex-shrink: 0;
+  }
+  .ft-insights .item .del:hover { color: var(--neg); }
+  .ft-insights .empty {
+    font-family: var(--mono); font-size: 10.5px; color: var(--text-4);
+    padding: 6px 4px; letter-spacing: 0.04em;
+  }
+  .ft-insights .add-btn {
+    all: unset; cursor: pointer;
+    margin-top: 10px; padding: 8px 12px;
+    display: block; width: 100%; text-align: center;
+    font-family: var(--mono); font-size: 11.5px;
+    color: var(--text-2);
+    border: 1px dashed var(--line);
+    border-radius: 7px;
+    letter-spacing: 0.04em;
+    transition: border-color .15s ease, color .15s ease, background .15s ease;
+  }
+  .ft-insights .add-btn:hover { border-color: var(--text-3); color: var(--text); background: var(--track-ghost); }
+  .ft-insights .add-form {
+    margin-top: 10px;
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 12px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  .ft-insights .add-form textarea {
+    all: unset; display: block; width: 100%;
+    min-height: 44px; resize: vertical;
+    font-family: var(--sans); font-size: 13px; color: var(--text);
+    padding: 8px 10px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    box-sizing: border-box;
+  }
+  .ft-insights .add-form .row2 {
+    display: grid; grid-template-columns: 80px 1fr; gap: 8px;
+  }
+  .ft-insights .add-form .row2 input,
+  .ft-insights .add-form .row2 select {
+    width: 100%; padding: 7px 9px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono); font-size: 12px;
+  }
+  .ft-insights .add-form .row3 { display: flex; gap: 6px; justify-content: flex-end; }
+  .ft-insights .add-form .row3 button {
+    all: unset; cursor: pointer;
+    padding: 6px 14px; font-family: var(--mono); font-size: 11.5px;
+    border-radius: 6px; letter-spacing: 0.03em;
+  }
+  .ft-insights .add-form .row3 .cancel { color: var(--text-3); border: 1px solid var(--line); }
+  .ft-insights .add-form .row3 .cancel:hover { color: var(--text); border-color: var(--text-3); }
+  .ft-insights .add-form .row3 .save {
+    background: var(--text); color: var(--bg); border: 1px solid var(--text);
+  }
+  .ft-insights .add-form .row3 .save:hover { opacity: 0.88; }
+  .ft-ring .hint {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-4);
+    font-variant-numeric: tabular-nums;
+    margin-top: 2px;
+  }
+  .ft-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .ft-btn {
+    all: unset;
+    flex: 1;
+    text-align: center;
+    padding: 10px 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    border-radius: 5px;
+    cursor: pointer;
+    background: var(--bg);
+    color: var(--text-2);
+    border: 1px solid var(--line);
+  }
+  .ft-btn:hover { border-color: var(--text-3); color: var(--text); }
+  .ft-btn.primary {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+  .ft-btn.primary:hover { opacity: 0.9; }
+  .ft-btn.danger {
+    color: var(--neg-fg);
+    border-color: var(--line);
+  }
+  .ft-btn.danger:hover { border-color: var(--neg); background: var(--neg-bg); }
+
+  .ft-session-summary {
+    margin: 8px 0 10px;
+    padding: 10px 12px;
+    background: var(--track-ghost);
+    border-radius: 5px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--text-2);
+    line-height: 1.7;
+  }
+  .ft-session-summary b { color: var(--text); font-weight: 500; }
+
+  /* Proposal dialog (end-of-session entry generation) */
+  .ft-modal {
+    position: fixed; inset: 0;
+    background: rgba(20,20,22,0.4);
+    backdrop-filter: blur(2px);
+    z-index: 50;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .ft-modal.open { display: flex; }
+  .ft-modal-card {
+    width: 420px;
+    max-width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  .ft-modal-head {
+    padding: 14px 18px 12px;
+    border-bottom: 1px solid var(--line-2);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .ft-modal-body { padding: 14px 18px 16px; }
 
   /* ======================= */
   /* Projects                */
@@ -547,6 +1417,75 @@
   .project-detail .row .k { color: var(--text-4); }
   .project-detail .row .v { color: var(--text-2); font-variant-numeric: tabular-nums; }
   .project-detail .row .v b { color: var(--text); font-weight: 500; }
+
+  /* 子项小进度条 —— 展开后显示 */
+  .sub-list {
+    margin: 10px 0 2px 0;
+    padding: 10px 0 2px 0;
+    border-top: 1px dashed var(--line-2);
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .sub-list .sub-label {
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-4);
+    margin-bottom: 2px;
+    font-family: var(--mono);
+  }
+  .sub-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 2px 0;
+  }
+  .sub-row .sub-name {
+    font-size: 12.5px;
+    color: var(--text-2);
+    letter-spacing: -0.003em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sub-row .sub-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .sub-row .sub-meta .w {
+    color: var(--text-4);
+    font-size: 10px;
+  }
+  .sub-track {
+    grid-column: 1 / -1;
+    position: relative;
+    height: 2px;
+    background: var(--line-2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .sub-track.zero { background: var(--line); }
+  .sub-track .sub-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: var(--c);
+    border-radius: 2px;
+    opacity: 0.9;
+  }
+  .sub-track.zero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(90deg, var(--text-4) 0 1px, transparent 1px 4px);
+    opacity: 0.35;
+  }
 
   .project {
     display: flex;
@@ -750,6 +1689,15 @@
   </footer>
 </div>
 
+<!-- Floating Focus Timer -->
+<button class="ft-fab" id="ft-fab" type="button" aria-label="专注计时器">
+  <span class="dot"></span>
+  <span id="ft-fab-label">专注计时</span>
+  <span class="ft-elapsed" id="ft-fab-elapsed" style="display:none"></span>
+</button>
+<div class="ft-panel" id="ft-panel" role="dialog" aria-label="专注计时器"></div>
+<div class="ft-modal" id="ft-modal" role="dialog" aria-label="生成今日明细"></div>
+
 <script>
 (async function () {
   const main = document.getElementById('main');
@@ -767,17 +1715,24 @@
     </section>
   `;
 
-  let data;
+  let data, cfg;
   try {
-    const r = await fetch('./data.json', { cache: 'no-store' });
-    if (!r.ok) throw new Error('http ' + r.status);
-    data = await r.json();
+    const [r1, r2] = await Promise.all([
+      fetch('./data.json', { cache: 'no-store' }),
+      fetch('./config.json', { cache: 'no-store' })
+    ]);
+    if (!r1.ok) throw new Error('data.json http ' + r1.status);
+    data = await r1.json();
+    cfg = r2.ok ? await r2.json() : {};
   } catch (e) {
     main.innerHTML = `<div class="err">无法加载 data.json · ${e.message} · 请检查同目录下是否存在该文件</div>`;
     return;
   }
 
+  window.__CFG__ = cfg;
+  window.__DATA__ = data;
   render(data);
+  FocusTimer.init(data, cfg);
 })();
 
 function fmtUpdated(iso) {
@@ -801,11 +1756,40 @@ function render(data) {
 
   const { today, yesterday, user, projects } = data;
   const d = deltaState(today.points, yesterday.points);
-  const sortedProjects = [...projects].sort((a,b) => b.pct - a.pct);
-  const levelPct = Math.round(user.total_points * 100 / (user.total_points + user.points_to_next_level));
+  const visibleProjects = projects.filter(p => p.visible !== false);
+  const sortedProjects = [...visibleProjects].sort((a,b) => b.pct - a.pct);
 
-  // build percentile bins — 10 bins; highlight the one matching rank_pct
-  const activeBin = Math.min(9, Math.floor(today.rank_pct / 10));
+  // historical rank: % of past days strictly below today's points
+  const history = Array.isArray(data.history_points) ? data.history_points : [];
+  const rankPct = history.length > 0
+    ? Math.round((history.filter(p => p < today.points).length / history.length) * 100)
+    : (today.rank_pct || 0);
+  const yRankPct = history.length > 0
+    ? Math.round((history.filter(p => p < yesterday.points).length / history.length) * 100)
+    : 0;
+  const rankDelta = rankPct - yRankPct;
+  const rankSample = history.length;
+
+  // build percentile bins — 10 bins; highlight the one matching rankPct
+  const activeBin = Math.min(9, Math.floor(rankPct / 10));
+
+  // recent 7 days (including today) — bars with date + value
+  const pad2 = (n) => String(n).padStart(2, '0');
+  const parseDate = (s) => {
+    const [y,m,d] = s.split('-').map(Number);
+    return new Date(y, m-1, d);
+  };
+  const fmtMD = (dt) => `${dt.getMonth()+1}/${dt.getDate()}`;
+  const todayDate = parseDate(today.date);
+  const recentDays = [];
+  for (let i = 6; i >= 1; i--) {
+    const dt = new Date(todayDate); dt.setDate(todayDate.getDate() - i);
+    const idx = history.length - i;
+    const v = idx >= 0 ? history[idx] : null;
+    recentDays.push({ date: dt, label: fmtMD(dt), value: v, today: false });
+  }
+  recentDays.push({ date: todayDate, label: fmtMD(todayDate), value: today.points, today: true });
+  const recentMax = Math.max(1, ...recentDays.map(d => d.value || 0));
 
   main.innerHTML = `
     <!-- HERO -->
@@ -819,20 +1803,16 @@ function render(data) {
         <div class="hero-number">
           <span class="n">${today.points}</span>
           <span class="unit">分</span>
+          <span class="cum">（累计 <b>${user.total_points.toLocaleString()}</b>）</span>
           <span class="delta-chip ${d.kind}">${d.arr} ${d.chip}</span>
         </div>
         <div class="hero-sub">
           <span class="badge ${d.kind}"><span>${d.arr}</span><span>${d.text}</span></span>
-          <span class="rank-text">超过过往 <b class="tnum">${today.rank_pct}%</b> 天数</span>
+          <span class="rank-text">超过过往 <b class="tnum">${rankPct}%</b> 天数${rankSample ? ` · 共 ${rankSample} 天` : ''}</span>
         </div>
 
         <!-- state strip (demo of three chip states) -->
-        <div class="statestrip">
-          <span class="label">state</span>
-          <span class="badge pos"><span>↑</span><span>比昨日多 30 分</span></span>
-          <span class="badge neg"><span>↓</span><span>比昨日少 10 分</span></span>
-          <span class="badge neu"><span>=</span><span>与昨日持平</span></span>
-        </div>
+        <!-- removed per user request -->
       </div>
 
       <div class="hero-side">
@@ -843,44 +1823,23 @@ function render(data) {
         <div class="percentile">
           <div class="percentile-label">
             <span>历史排名</span>
-            <span>超过过往 <b>${today.rank_pct}%</b></span>
+            <span>超过过往 <b>${rankPct}%</b></span>
           </div>
           <div class="bins" aria-hidden="true">
-            ${Array.from({length: 10}).map((_,i) => {
-              const h = 6 + (i * 2);
-              const active = i <= activeBin ? 'active' : '';
-              return `<i class="${active}" style="height:${h}px"></i>`;
+            ${recentDays.map(day => {
+              const h = day.value != null ? Math.max(3, Math.round((day.value / recentMax) * 42)) : 3;
+              return `<div class="bar${day.today ? ' today' : ''}">
+                <div class="v">${day.value != null ? day.value : ''}</div>
+                <div class="col" style="height:${h}px"></div>
+                <div class="d">${day.label}</div>
+              </div>`;
             }).join('')}
           </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- STATS -->
-    <section class="stats">
-      <div class="stat">
-        <div class="label">累计积分</div>
-        <div class="val"><span class="big">${user.total_points}</span><span class="small">分</span></div>
-      </div>
-      <div class="stat">
-        <div class="label">当前等级</div>
-        <div class="val">
-          <span class="big">Lv${user.level}</span>
-          <span class="small">${user.level_name}</span>
-        </div>
-        <div class="sublevel"><i style="width:${levelPct}%"></i></div>
-        <div class="sublevel-caption">
-          <span>${user.total_points} / ${user.total_points + user.points_to_next_level}</span>
-          <span>→ ${user.next_level_name}</span>
-        </div>
-      </div>
-      <div class="stat">
-        <div class="label">连续打卡</div>
-        <div class="val"><span class="big">${user.streak_days}</span><span class="small">天</span></div>
-        <div class="streak-dots">
-          ${Array.from({length: 7}).map((_,i) =>
-            `<i class="${i < user.streak_days ? '' : 'ghost'}"></i>`
-          ).join('')}
+          <div class="percentile-caption">
+            ${rankSample > 0
+              ? `比昨日 <b class="rdelta ${rankDelta > 0 ? 'pos' : rankDelta < 0 ? 'neg' : 'neu'}">${rankDelta > 0 ? '↑ +' + rankDelta : rankDelta < 0 ? '↓ ' + rankDelta : '= 0'}</b>个百分点`
+              : '样本不足'}
+          </div>
         </div>
       </div>
     </section>
@@ -888,22 +1847,22 @@ function render(data) {
     ${renderFocusBar()}
 
     <div class="belowhero">
-      <!-- ENTRIES (今日明细 — 左侧，主角) -->
-      <section class="section">
-        <header class="section-head">
-          <div class="section-title">今日明细</div>
+      <!-- ENTRIES (今日明细 — 左侧，主角, 可折叠) -->
+      <section class="section" id="entries-section">
+        <header class="section-head entries-head" data-act="toggle-entries" role="button" tabindex="0" aria-expanded="true">
+          <div class="section-title"><span class="chev-sec" aria-hidden="true">▾</span>今日明细</div>
           <div class="section-meta">${today.entries.length} 条 · ${today.points} 分</div>
         </header>
-        <div class="entries">
-          ${today.entries.map(e => renderEntry(e, projects)).join('')}
+        <div class="entries" id="entries-list">
+          ${[...today.entries].reverse().map(e => renderEntry(e, projects)).join('')}
         </div>
       </section>
 
       <!-- PROJECTS (长期目标 — 右侧，可折叠) -->
-      <section class="section">
-        <header class="section-head">
-          <div class="section-title">长期目标</div>
-          <div class="section-meta">${projects.length} 项 · 点击展开</div>
+      <section class="section" id="projects-section">
+        <header class="section-head entries-head" data-act="toggle-projects" role="button" tabindex="0" aria-expanded="true">
+          <div class="section-title"><span class="chev-sec" aria-hidden="true">▾</span>长期目标</div>
+          <div class="section-meta">${sortedProjects.length} 项 · 点击展开</div>
         </header>
         <div class="projects" id="projects-list">
           ${sortedProjects.map(p => renderProject(p)).join('')}
@@ -913,65 +1872,108 @@ function render(data) {
   `;
 
   bindProjectToggles();
+  bindEntriesToggle();
+  bindProjectsToggle();
   startFocusClock();
   return; // main.innerHTML already assigned above
 }
 
-// ——————— Focus window (9:30–18:00) ———————
-const FOCUS_START_MIN = 9 * 60 + 30;
-const FOCUS_END_MIN   = 18 * 60;
-const FOCUS_TOTAL_MIN = FOCUS_END_MIN - FOCUS_START_MIN; // 510
+// ——————— Focus window (heat bar) ———————
+function parseHHMM(s) {
+  const [h, m] = s.split(':').map(Number);
+  return h * 60 + m;
+}
+function getPool() {
+  const cfg = window.__CFG__ || {};
+  const fp = cfg.focus_pool || { start: '09:30', end: '18:00' };
+  return {
+    startMin: parseHHMM(fp.start),
+    endMin:   parseHHMM(fp.end),
+    startLabel: fp.start,
+    endLabel:   fp.end
+  };
+}
+function getTiers() {
+  const cfg = window.__CFG__ || {};
+  const t = (cfg.focus_timer && cfg.focus_timer.clarity_tiers) || [
+    { id:'crystal', label:'极清晰', min:80, color:'oklch(72% 0.17 150)' },
+    { id:'clear',   label:'较清晰', min:60, color:'oklch(72% 0.11 150)' },
+    { id:'normal',  label:'普通',   min:40, color:'oklch(73% 0.05 150)' },
+    { id:'foggy',   label:'脑雾',   min:0,  color:'oklch(64% 0.19 35)' }
+  ];
+  return [...t].sort((a,b) => b.min - a.min);
+}
+function tierFor(clarity) {
+  const tiers = getTiers();
+  for (const t of tiers) if (clarity >= t.min) return t;
+  return tiers[tiers.length - 1];
+}
+function minOfDate(iso) {
+  const d = new Date(iso);
+  return d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
+}
 
 function renderFocusBar() {
+  const pool = getPool();
+  const toLabel = (m) => {
+    const h = Math.floor(m / 60), mm = Math.floor(m % 60);
+    return `${String(h).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+  };
+  const midA = toLabel(pool.startMin + (pool.endMin - pool.startMin) / 3);
+  const midB = toLabel(pool.startMin + (pool.endMin - pool.startMin) * 2 / 3);
+  const tiers = getTiers();
+  const legend = tiers.map(t =>
+    `<span class="lg"><i class="sw" style="background:${t.color}"></i>${t.label}(≥${t.min})</span>`
+  ).join('') +
+  `<span class="lg"><i class="sw" style="background:var(--track)"></i>未专注</span>`;
+
   return `
     <section class="focus-bar" id="focus-bar">
       <div class="head">
-        <div class="title"><span class="live-dot" id="focus-dot"></span><span>今日专注时间池 · 09:30 → 18:00</span></div>
-        <div class="remaining" id="focus-remaining">—</div>
+        <div class="title"><span class="live-dot" id="focus-dot"></span><span>今日专注时间池 · ${pool.startLabel} → ${pool.endLabel}</span></div>
+        <div class="util" id="focus-util">
+          <span class="util-item"><span class="k">利用率/池</span><b id="util-pool">—</b></span>
+          <span class="sep">·</span>
+          <span class="util-item"><span class="k">利用率/已过</span><b id="util-elapsed">—</b></span>
+          <span class="sep">·</span>
+          <span class="util-item"><span class="k">已专注</span><b id="util-mins">—</b></span>
+        </div>
       </div>
-      <div class="focus-track">
-        <span class="used" id="focus-used" style="width:0%"></span>
+      <div class="focus-track" id="focus-track">
+        <span class="elapsed" id="focus-elapsed" style="width:0%"></span>
         <span class="now" id="focus-now" style="left:0%"></span>
       </div>
       <div class="focus-axis">
-        <span>09:30</span>
-        <span class="mid">12:00</span>
-        <span class="mid">14:30</span>
-        <span>18:00</span>
+        <span>${pool.startLabel}</span>
+        <span class="mid">${midA}</span>
+        <span class="mid">${midB}</span>
+        <span>${pool.endLabel}</span>
       </div>
+      <div class="focus-legend">${legend}</div>
     </section>
   `;
 }
 
 function updateFocusBar() {
+  const pool = getPool();
+  const total = pool.endMin - pool.startMin;
   const now = new Date();
   const nowMin = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
 
-  const used = document.getElementById('focus-used');
+  const track = document.getElementById('focus-track');
+  const elapsedEl = document.getElementById('focus-elapsed');
   const nowEl = document.getElementById('focus-now');
-  const rem = document.getElementById('focus-remaining');
   const dot = document.getElementById('focus-dot');
-  if (!used || !rem) return;
+  if (!track || !elapsedEl) return;
 
-  let state, usedPct, remainingMin;
-  if (nowMin < FOCUS_START_MIN) {
-    state = 'pre';
-    usedPct = 0;
-    remainingMin = FOCUS_TOTAL_MIN;
-  } else if (nowMin >= FOCUS_END_MIN) {
-    state = 'ended';
-    usedPct = 100;
-    remainingMin = 0;
-  } else {
-    state = 'live';
-    usedPct = ((nowMin - FOCUS_START_MIN) / FOCUS_TOTAL_MIN) * 100;
-    remainingMin = FOCUS_END_MIN - nowMin;
-  }
+  let state, elapsedPct;
+  if (nowMin < pool.startMin) { state = 'pre'; elapsedPct = 0; }
+  else if (nowMin >= pool.endMin) { state = 'ended'; elapsedPct = 100; }
+  else { state = 'live'; elapsedPct = ((nowMin - pool.startMin) / total) * 100; }
 
-  used.style.width = usedPct + '%';
-  used.classList.toggle('ended', state === 'ended');
+  elapsedEl.style.width = elapsedPct + '%';
   if (nowEl) {
-    nowEl.style.left = usedPct + '%';
+    nowEl.style.left = elapsedPct + '%';
     nowEl.classList.toggle('ended', state === 'ended');
     nowEl.classList.toggle('pre', state === 'pre');
   }
@@ -980,21 +1982,91 @@ function updateFocusBar() {
     dot.classList.toggle('pre', state === 'pre');
   }
 
-  const h = Math.floor(remainingMin / 60);
-  const m = Math.floor(remainingMin % 60);
-  const remainPct = Math.max(0, Math.min(100, 100 - usedPct));
-  let label;
-  if (state === 'pre') label = `尚未开始 · <b>${h}h ${String(m).padStart(2,'0')}m</b> 可用`;
-  else if (state === 'ended') label = `今日窗口已结束`;
-  else label = `剩 <b>${h}h ${String(m).padStart(2,'0')}m</b> <span class="pct">${remainPct.toFixed(0)}% 可用</span>`;
-  rem.innerHTML = label;
+  // render segments from today.focus_sessions + live session
+  const data = window.__DATA__ || {};
+  const sessions = (data.today && data.today.focus_sessions) || [];
+  const todayDateStr = data.today && data.today.date; // "YYYY-MM-DD"
+  // today's YYYY-MM-DD in LOCAL time (to compare against session start_at's local date)
+  const _tNow = new Date();
+  const localToday =
+    _tNow.getFullYear() + '-' +
+    String(_tNow.getMonth()+1).padStart(2,'0') + '-' +
+    String(_tNow.getDate()).padStart(2,'0');
+  const isSameLocalDate = (iso) => {
+    const d = new Date(iso);
+    const s =
+      d.getFullYear() + '-' +
+      String(d.getMonth()+1).padStart(2,'0') + '-' +
+      String(d.getDate()).padStart(2,'0');
+    // require session's local date to match both today's real date AND data.today.date
+    return s === localToday && (!todayDateStr || s === todayDateStr);
+  };
+  // remove old segs
+  track.querySelectorAll('.seg').forEach(n => n.remove());
+  let focusedMin = 0;
+  for (const s of sessions) {
+    // FILTER: only sessions whose local date matches today (prevents yesterday's sessions bleeding into today's bar)
+    if (!isSameLocalDate(s.start_at)) continue;
+    const a = minOfDate(s.start_at);
+    const b = minOfDate(s.end_at);
+    // CLIP: never draw into the future — end can't exceed now
+    const clipA = Math.max(a, pool.startMin);
+    const clipB = Math.min(b, pool.endMin, nowMin);
+    if (clipB <= clipA) continue;
+    focusedMin += (clipB - clipA);
+    const left = ((clipA - pool.startMin) / total) * 100;
+    const width = ((clipB - clipA) / total) * 100;
+    const clarity = (Number(s.pre_clarity || 0) + Number(s.post_clarity || 0)) / 2;
+    const tier = tierFor(clarity);
+    const el = document.createElement('span');
+    el.className = 'seg';
+    el.style.cssText = `left:${left}%; width:${width}%; --c:${tier.color}`;
+    el.title = `${toTime(s.start_at)}–${toTime(s.end_at)} · 清晰度均 ${Math.round(clarity)} · ${tier.label}`;
+    track.insertBefore(el, nowEl);
+  }
+  // live session (timer running)
+  const live = FocusTimer.getLiveSegment ? FocusTimer.getLiveSegment() : null;
+  if (live) {
+    const a = live.startMin;
+    const b = Math.min(nowMin, pool.endMin);
+    const clipA = Math.max(a, pool.startMin);
+    const clipB = Math.min(b, pool.endMin);
+    if (clipB > clipA) {
+      focusedMin += (clipB - clipA);
+      const left = ((clipA - pool.startMin) / total) * 100;
+      const width = ((clipB - clipA) / total) * 100;
+      const tier = tierFor(live.clarity);
+      const el = document.createElement('span');
+      el.className = 'seg live';
+      el.style.cssText = `left:${left}%; width:${width}%; --c:${tier.color}`;
+      el.title = `进行中 · 开始清晰度 ${live.clarity}`;
+      track.insertBefore(el, nowEl);
+    }
+  }
+
+  const elapsedMin = Math.max(0, Math.min(total, nowMin - pool.startMin));
+  const utilPool = total > 0 ? (focusedMin / total) * 100 : 0;
+  const utilElapsed = elapsedMin > 0 ? (focusedMin / elapsedMin) * 100 : 0;
+  const uP = document.getElementById('util-pool');
+  const uE = document.getElementById('util-elapsed');
+  const uM = document.getElementById('util-mins');
+  if (uP) uP.textContent = utilPool.toFixed(1) + '%';
+  if (uE) uE.textContent = (state === 'pre' ? '—' : utilElapsed.toFixed(1) + '%');
+  if (uM) {
+    const h = Math.floor(focusedMin / 60), m = Math.floor(focusedMin % 60);
+    uM.textContent = (h > 0 ? `${h}h ${String(m).padStart(2,'0')}m` : `${Math.round(focusedMin)}m`);
+  }
+}
+function toTime(iso) {
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
 let _focusTimer = null;
 function startFocusClock() {
   updateFocusBar();
   if (_focusTimer) clearInterval(_focusTimer);
-  _focusTimer = setInterval(updateFocusBar, 30 * 1000); // 30s cadence
+  _focusTimer = setInterval(updateFocusBar, 15 * 1000);
 }
 
 function renderProject(p) {
@@ -1025,7 +2097,29 @@ function renderProject(p) {
         <div class="row"><span class="k">today</span><span class="v">${delta > 0 ? `<b>+${fmtPct(delta)}%</b> (${fmtPct(prev)}% → ${fmtPct(p.pct)}%)` : (zero ? '待启程' : '无变动')}</span></div>
         <div class="row"><span class="k">remaining</span><span class="v"><b>${fmtPct(remaining)}%</b> 到终点</span></div>
         <div class="row"><span class="k">id</span><span class="v">${escapeHtml(p.id)}</span></div>
+        ${renderSubList(p)}
       </div>
+    </div>
+  `;
+}
+
+function renderSubList(p) {
+  if (!Array.isArray(p.sub) || p.sub.length === 0) return '';
+  const rows = p.sub.map(s => {
+    const pct = Math.max(0, Math.min(100, s.pct || 0));
+    const zero = pct === 0;
+    return `
+      <div class="sub-row">
+        <span class="sub-name">${escapeHtml(s.name)}</span>
+        <span class="sub-meta"><span class="w">w${s.weight}</span>${fmtPct(pct)}%</span>
+        <span class="sub-track ${zero ? 'zero' : ''}">${zero ? '' : `<span class="sub-fill" style="width:${pct}%"></span>`}</span>
+      </div>
+    `;
+  }).join('');
+  return `
+    <div class="sub-list">
+      <div class="sub-label">子项 · ${p.sub.length} 项</div>
+      ${rows}
     </div>
   `;
 }
@@ -1039,6 +2133,55 @@ function bindProjectToggles() {
     const proj = btn.closest('.project');
     const open = proj.classList.toggle('open');
     btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+}
+
+function bindEntriesToggle() {
+  const section = document.getElementById('entries-section');
+  if (!section) return;
+  const head = section.querySelector('.entries-head');
+  if (!head) return;
+  // restore persisted state
+  try {
+    if (localStorage.getItem('lifeflow_entries_collapsed') === '1') {
+      section.classList.add('collapsed');
+      head.setAttribute('aria-expanded', 'false');
+    }
+  } catch(e) {}
+  const toggle = () => {
+    const collapsed = section.classList.toggle('collapsed');
+    head.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    try { localStorage.setItem('lifeflow_entries_collapsed', collapsed ? '1' : '0'); } catch(e) {}
+  };
+  head.addEventListener('click', toggle);
+  head.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+  });
+}
+
+function bindProjectsToggle() {
+  const section = document.getElementById('projects-section');
+  if (!section) return;
+  const head = section.querySelector('.entries-head');
+  if (!head) return;
+  try {
+    if (localStorage.getItem('lifeflow_projects_collapsed') === '1') {
+      section.classList.add('collapsed');
+      head.setAttribute('aria-expanded', 'false');
+    }
+  } catch(e) {}
+  const toggle = () => {
+    const collapsed = section.classList.toggle('collapsed');
+    head.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    try { localStorage.setItem('lifeflow_projects_collapsed', collapsed ? '1' : '0'); } catch(e) {}
+  };
+  head.addEventListener('click', (ev) => {
+    // 防止子项目的 summary 点击冒泡到 header 时触发折叠
+    if (ev.target.closest('.project-summary')) return;
+    toggle();
+  });
+  head.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
   });
 }
 
@@ -1077,6 +2220,818 @@ function escapeHtml(s) {
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
   }[c]));
 }
+
+// ——————— Focus Timer (floating) ———————
+const FocusTimer = (function () {
+  const LS_KEY = 'lifeflow_focus_timer_v1';
+  let state = null;   // { mode, plannedSec, startedAt, preClarity, projectId, note, running }
+  let tickHandle = null;
+  let data = null, cfg = null;
+
+  function save() {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(state || null)); } catch(e){}
+  }
+  function load() {
+    try {
+      const s = localStorage.getItem(LS_KEY);
+      if (s) state = JSON.parse(s);
+    } catch(e) { state = null; }
+  }
+
+  function fmtHMS(sec) {
+    sec = Math.max(0, Math.floor(sec));
+    const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+    return (h > 0 ? String(h).padStart(2,'0') + ':' : '') +
+           String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  }
+  function fmtMMSS(sec) {
+    sec = Math.max(0, Math.floor(sec));
+    const m = Math.floor(sec / 60), s = sec % 60;
+    return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  }
+  function nowIso() { return new Date().toISOString(); }
+
+  function getLiveSegment() {
+    if (!state || !state.running) return null;
+    const d = new Date(state.startedAt);
+    const startMin = d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
+    return { startMin, clarity: state.preClarity };
+  }
+
+  function elapsedSec() {
+    if (!state || !state.startedAt) return 0;
+    return (Date.now() - new Date(state.startedAt).getTime()) / 1000;
+  }
+  function remainingSec() {
+    if (!state || state.mode !== 'countdown' || !state.plannedSec) return 0;
+    return Math.max(0, state.plannedSec - elapsedSec());
+  }
+
+  function openPanel() {
+    document.getElementById('ft-panel').classList.add('open');
+    renderPanel();
+  }
+  function closePanel() {
+    document.getElementById('ft-panel').classList.remove('open');
+  }
+  function toggleFabLabel() {
+    const fab = document.getElementById('ft-fab');
+    const label = document.getElementById('ft-fab-label');
+    const elp = document.getElementById('ft-fab-elapsed');
+    if (state && state.running) {
+      fab.classList.add('running');
+      label.style.display = 'none';
+      elp.style.display = '';
+      const left = state.mode === 'countdown' ? remainingSec() : elapsedSec();
+      elp.textContent = fmtHMS(left);
+    } else {
+      fab.classList.remove('running');
+      label.style.display = '';
+      elp.style.display = 'none';
+    }
+  }
+
+  function renderPanel() {
+    const panel = document.getElementById('ft-panel');
+    if (!panel.classList.contains('open')) return;
+    const projects = (data && data.projects) || [];
+    const selectedPid = (state && state.setupProjectId) || '';
+    const projOptions = [`<option value="" ${selectedPid===''?'selected':''}>— 不挂项目 (可结束后再决定) —</option>`]
+      .concat(projects.map(p => `<option value="${p.id}" ${selectedPid===p.id?'selected':''}>${escapeHtml(p.name)}</option>`))
+      .join('');
+
+    if (!state || !state.running) {
+      // ========== SETUP STATE ==========
+      // Unified: setupMinutes === 0 → stopwatch; > 0 → countdown.
+      // Ring is draggable — drag stroke to set minutes (full circle = 60 min).
+      state = state || {};
+      if (state.setupMinutes == null) state.setupMinutes = 45;
+      if (state.setupClarity == null) state.setupClarity = 70; // default "较清晰"
+      if (state.setupProjectId == null) state.setupProjectId = '';
+      if (state.setupNote == null) state.setupNote = '';
+
+      const minutes = state.setupMinutes;
+      const isCountdown = minutes > 0;
+      const tier = tierFor(state.setupClarity);
+      const R = 80, C = 2 * Math.PI * R;
+      const RING_FULL_MIN = 60;
+      const ringFrac = isCountdown ? Math.min(1, minutes / RING_FULL_MIN) : 0;
+      const dashOffset = C * (1 - ringFrac);
+      const ringDisplay = isCountdown ? fmtMMSS(minutes * 60) : '00:00';
+      const ringSub = isCountdown ? '计划时长' : '拖环设时长 · 或按开始计时';
+
+      const ctaText = isCountdown
+        ? `开始 <span class="cta-sub">· ${minutes} min</span>`
+        : `开始计时`;
+
+      const handleTheta = -Math.PI/2 + ringFrac * 2 * Math.PI;
+      const handleX = 90 + R * Math.cos(handleTheta);
+      const handleY = 90 + R * Math.sin(handleTheta);
+
+      // tier tick labels (for gradient bar)
+      const tiers = [...getTiers()].reverse(); // low → high
+      const activeTierId = tier.id;
+      const tierTicksHtml = tiers.map(t =>
+        `<span class="${t.id===activeTierId?'active':''}">${t.label}</span>`
+      ).join('');
+
+      const nameVal = state.setupNote || '';
+      const nameHtml = nameVal
+        ? `<div class="name-slot" data-act="name-edit" title="点击编辑">${escapeHtml(nameVal)}</div>`
+        : `<div class="name-slot empty" data-act="name-edit" title="点击命名这次专注">命名</div>`;
+
+      panel.innerHTML = `
+        <div class="ft-card">
+        <div class="ft-head">
+          <span class="t">专注计时</span>
+          <button class="x" data-act="close">×</button>
+        </div>
+        <div class="ft-body">
+
+          <div class="ft-ring-wrap">
+            <div class="ft-ring setup ${!isCountdown?'breath':''} ${isCountdown?'draggable-on':'draggable-empty'}" id="ft-ring-setup" tabindex="0">
+              <svg viewBox="0 0 180 180" aria-hidden="true">
+                <circle class="track-c" cx="90" cy="90" r="${R}"></circle>
+                <circle class="prog-c" cx="90" cy="90" r="${R}"
+                  style="stroke:${tier.color}; stroke-dasharray:${C.toFixed(2)}; stroke-dashoffset:${dashOffset.toFixed(2)}"></circle>
+                ${isCountdown ? `<circle class="handle" cx="${handleX.toFixed(2)}" cy="${handleY.toFixed(2)}" r="7" style="fill:${tier.color}"></circle>` : ''}
+              </svg>
+              ${nameHtml}
+              <div class="center">
+                <span class="big" id="ft-ring-display">${ringDisplay}</span>
+                <span class="sub">${ringSub}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ft-grid">
+            <div class="ft-field span-2">
+              <div class="label"><span>大脑清晰度</span><span class="val" id="ft-clarity-val">${tier.label} · ${state.setupClarity}</span></div>
+              <div class="ft-clarity-gradient" id="ft-clarity-bar">
+                <div class="track" id="ft-clarity-track">
+                  <div class="thumb" id="ft-clarity-thumb" style="--c:${tier.color}; left:${state.setupClarity}%"></div>
+                </div>
+                <div class="ticks">${tierTicksHtml}</div>
+              </div>
+            </div>
+
+            <div class="ft-field span-2">
+              <div class="label"><span>挂到项目</span></div>
+              <select id="ft-project">${projOptions}</select>
+            </div>
+          </div>
+
+          <div class="ft-cta-wrap">
+            <button class="ft-cta" data-act="start">${ctaText}</button>
+          </div>
+        </div>
+        </div>
+      `;
+    } else {
+      // ========== RUNNING STATE ==========
+      const mode = state.mode;
+      const left = mode === 'countdown' ? remainingSec() : elapsedSec();
+      const subLabel = mode === 'countdown' ? '倒计时剩余' : '已专注';
+      const tier = tierFor(state.preClarity);
+      const R = 80;
+      const C = 2 * Math.PI * R;
+      let progressFrac = 0;
+      let ringMode = 'none';
+      if (mode === 'countdown' && state.plannedSec) {
+        progressFrac = Math.max(0, Math.min(1, remainingSec() / state.plannedSec));
+        ringMode = 'countdown';
+      } else if (mode === 'stopwatch') {
+        progressFrac = 1;
+        ringMode = 'breath';
+      }
+      const dashOffset = C * (1 - progressFrac);
+
+      const projName = state.projectId
+        ? (projects.find(p=>p.id===state.projectId)||{}).name
+        : null;
+
+      // ---- insights UI ----
+      state.insights = state.insights || [];
+      const nameShow = state.note || '';
+      const nameHtmlRun = nameShow
+        ? `<div class="name-slot" data-act="name-edit" title="点击编辑">${escapeHtml(nameShow)}</div>`
+        : `<div class="name-slot empty" data-act="name-edit" title="点击命名这次专注">命名</div>`;
+
+      const insightsListHtml = state.insights.length > 0
+        ? `<div class="items">${state.insights.map((it, i) => {
+            const proj = projects.find(p => p.id === it.projectId);
+            const pName = proj ? proj.name : '无项目';
+            return `<div class="item" data-idx="${i}">
+              <span class="txt">${escapeHtml(it.text)}</span>
+              <span class="proj">${escapeHtml(pName)}</span>
+              <span class="pts">+${it.points}</span>
+              <button class="del" data-act="insight-del" data-idx="${i}" aria-label="删除">×</button>
+            </div>`;
+          }).join('')}</div>`
+        : `<div class="empty">还没有记录 · 心流中任何心得感悟都可以随手记下</div>`;
+
+      const addingInsight = state.addingInsight === true;
+      const insightProjOpts = ['<option value="">— 无项目 —</option>']
+        .concat(projects.map(p => {
+          const sel = (state._insightDraft && state._insightDraft.projectId === p.id)
+            || (!state._insightDraft && state.projectId === p.id);
+          return `<option value="${p.id}" ${sel?'selected':''}>${escapeHtml(p.name)}</option>`;
+        })).join('');
+      const draftText = (state._insightDraft && state._insightDraft.text) || '';
+      const draftPts = (state._insightDraft && state._insightDraft.points != null) ? state._insightDraft.points : 15;
+
+      const addFormHtml = addingInsight
+        ? `<div class="add-form">
+             <textarea id="ft-ins-text" placeholder="比如：总结出 X 的 3 步流程 / 发现 Y 的瓶颈在 Z…" autofocus>${escapeHtml(draftText)}</textarea>
+             <div class="row2">
+               <input type="number" id="ft-ins-pts" min="1" max="100" step="1" value="${draftPts}" aria-label="积分" />
+               <select id="ft-ins-proj">${insightProjOpts}</select>
+             </div>
+             <div class="row3">
+               <button class="cancel" data-act="insight-cancel">取消</button>
+               <button class="save" data-act="insight-save">记下</button>
+             </div>
+           </div>`
+        : `<button class="add-btn" data-act="insight-add">+ 记一条心得</button>`;
+
+      panel.innerHTML = `
+        <div class="ft-card">
+        <div class="ft-head">
+          <span class="t">专注中</span>
+          <button class="x" data-act="close">×</button>
+        </div>
+        <div class="ft-body">
+          <div class="ft-ring-wrap">
+            <div class="ft-ring ${ringMode==='breath'?'breath':''}">
+              <svg viewBox="0 0 180 180" aria-hidden="true">
+                <circle class="track-c" cx="90" cy="90" r="${R}"></circle>
+                <circle class="prog-c" cx="90" cy="90" r="${R}"
+                  style="stroke:${tier.color}; stroke-dasharray:${C.toFixed(2)}; stroke-dashoffset:${dashOffset.toFixed(2)}"></circle>
+              </svg>
+              ${nameHtmlRun}
+              <div class="center">
+                <span class="big" id="ft-big">${fmtHMS(left)}</span>
+                <span class="sub">${subLabel}</span>
+              </div>
+            </div>
+          </div>
+          <div class="ft-meta-strip">
+            <span><span class="k">模式</span><b>${mode==='countdown'?'倒计时 '+Math.round(state.plannedSec/60)+'m':'正计时'}</b></span>
+            <span class="sep">·</span>
+            <span><span class="k">状态</span><span class="ft-clarity-chip" style="--c:${tier.color}">${tier.label}</span></span>
+            ${projName ? `<span class="sep">·</span><span><span class="k">项目</span><b>${escapeHtml(projName)}</b></span>` : ''}
+          </div>
+
+          <div class="ft-insights">
+            <div class="hdr">
+              <span class="t">本次心得</span>
+              <span class="count">${state.insights.length} 条 · 累计 +${state.insights.reduce((s,i)=>s+i.points,0)}</span>
+            </div>
+            ${insightsListHtml}
+            ${addFormHtml}
+          </div>
+
+          <div class="ft-cta-wrap">
+            <button class="ft-btn danger" data-act="cancel">放弃</button>
+            <button class="ft-cta" data-act="finish">结束并填写</button>
+          </div>
+        </div>
+        </div>
+      `;
+    }
+    // after panel HTML is in place, install ring-drag handlers if we're in setup
+    if (!state || !state.running) {
+      installRingDrag(document.getElementById('ft-panel'));
+      installClarityBar(document.getElementById('ft-panel'));
+    }
+  }
+
+  function onPanelClick(ev) {
+    // handle name-slot edit (both setup & running)
+    const nameSlot = ev.target.closest('.name-slot');
+    if (nameSlot && !nameSlot.classList.contains('editing')) {
+      beginNameEdit(nameSlot);
+      return;
+    }
+
+    const btn = ev.target.closest('[data-act]');
+    if (!btn) return;
+    const act = btn.dataset.act;
+    if (act === 'close') return closePanel();
+    if (act === 'start') return startRun();
+    if (act === 'cancel') return cancelRun();
+    if (act === 'finish') return finishRun();
+    if (act === 'insight-add') {
+      state.addingInsight = true;
+      state._insightDraft = { text: '', points: 15, projectId: state.projectId || '' };
+      renderPanel();
+      const ta = document.getElementById('ft-ins-text');
+      if (ta) ta.focus();
+      return;
+    }
+    if (act === 'insight-cancel') {
+      state.addingInsight = false;
+      state._insightDraft = null;
+      renderPanel();
+      return;
+    }
+    if (act === 'insight-save') {
+      const ta = document.getElementById('ft-ins-text');
+      const pts = document.getElementById('ft-ins-pts');
+      const pr = document.getElementById('ft-ins-proj');
+      const text = (ta && ta.value || '').trim();
+      if (!text) { if (ta) ta.focus(); return; }
+      const points = Math.max(1, Math.min(100, Number(pts && pts.value) || 15));
+      const projectId = (pr && pr.value) || null;
+      state.insights = state.insights || [];
+      state.insights.push({
+        id: 'i_' + Date.now().toString(36),
+        text, points, projectId,
+        at: nowIso()
+      });
+      state.addingInsight = false;
+      state._insightDraft = null;
+      save();
+      renderPanel();
+      return;
+    }
+    if (act === 'insight-del') {
+      const idx = Number(btn.dataset.idx);
+      if (!isNaN(idx) && state.insights && state.insights[idx]) {
+        state.insights.splice(idx, 1);
+        save();
+        renderPanel();
+      }
+      return;
+    }
+  }
+
+  // Inline edit of the ring-center "name-slot" (session title)
+  function beginNameEdit(slot) {
+    state = state || {};
+    const current = state.running ? (state.note || '') : (state.setupNote || '');
+    slot.classList.remove('empty');
+    slot.classList.add('editing');
+    slot.innerHTML = `<input type="text" maxlength="40" value="${escapeHtml(current)}" placeholder="命名…" />`;
+    const inp = slot.querySelector('input');
+    inp.focus();
+    inp.setSelectionRange(inp.value.length, inp.value.length);
+    const commit = () => {
+      const v = inp.value.trim();
+      if (state.running) state.note = v;
+      else state.setupNote = v;
+      save();
+      renderPanel();
+    };
+    const cancel = () => renderPanel();
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); commit(); }
+      else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+    });
+    inp.addEventListener('blur', commit);
+    // stop click from bubbling to close handler
+    slot.addEventListener('click', e => e.stopPropagation());
+  }
+
+  // Clarity gradient bar — click/drag to set 0..100
+  function installClarityBar(panel) {
+    const bar = panel.querySelector('#ft-clarity-bar');
+    if (!bar) return;
+    const track = bar.querySelector('.track');
+
+    function valFromEvent(ev) {
+      const r = track.getBoundingClientRect();
+      const pt = ev.touches && ev.touches[0] ? ev.touches[0] : ev;
+      const x = pt.clientX - r.left;
+      return Math.max(0, Math.min(100, Math.round((x / r.width) * 100)));
+    }
+    function updateVisual(v) {
+      state = state || {};
+      state.setupClarity = v;
+      const tier = tierFor(v);
+      const thumb = bar.querySelector('#ft-clarity-thumb');
+      if (thumb) {
+        thumb.style.left = v + '%';
+        thumb.style.setProperty('--c', tier.color);
+      }
+      const valEl = bar.querySelector('#ft-clarity-val') || panel.querySelector('#ft-clarity-val');
+      if (valEl) valEl.textContent = tier.label + ' · ' + v;
+      // tick active
+      bar.querySelectorAll('.ticks span').forEach(el => el.classList.remove('active'));
+      const tiers = [...getTiers()].reverse();
+      const idx = tiers.findIndex(t => t.id === tier.id);
+      const tickEls = bar.querySelectorAll('.ticks span');
+      if (tickEls[idx]) tickEls[idx].classList.add('active');
+      // also update ring stroke + handle color live (in setup)
+      const ring = document.getElementById('ft-ring-setup');
+      if (ring) {
+        const prog = ring.querySelector('.prog-c');
+        if (prog) prog.style.stroke = tier.color;
+        const handle = ring.querySelector('.handle');
+        if (handle) handle.style.fill = tier.color;
+      }
+    }
+    function onMove(ev) {
+      ev.preventDefault();
+      updateVisual(valFromEvent(ev));
+    }
+    function onUp() {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchend', onUp);
+      save();
+    }
+    function onDown(ev) {
+      ev.preventDefault();
+      updateVisual(valFromEvent(ev));
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('touchmove', onMove, { passive: false });
+      window.addEventListener('mouseup', onUp);
+      window.addEventListener('touchend', onUp);
+    }
+    track.addEventListener('mousedown', onDown);
+    track.addEventListener('touchstart', onDown, { passive: false });
+  }
+
+  function onPanelInput(ev) {
+    const id = ev.target.id;
+    if (id === 'ft-project') {
+      state = state || {};
+      state.setupProjectId = ev.target.value;
+      return;
+    }
+  }
+
+  // Ring drag — sets setupMinutes by angle around ring center (full circle = 60 min).
+  function installRingDrag(panel) {
+    const ring = panel.querySelector('#ft-ring-setup');
+    if (!ring) return;
+    const RING_FULL_MIN = 60;
+
+    function minutesFromEvent(ev) {
+      const r = document.getElementById('ft-ring-setup');
+      if (!r) return null;
+      const rect = r.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const pt = ev.touches && ev.touches[0] ? ev.touches[0] : ev;
+      const dx = pt.clientX - cx;
+      const dy = pt.clientY - cy;
+      // visual angle CW from 12 o'clock (top), in [0, 2π)
+      let theta = Math.atan2(dx, -dy);
+      if (theta < 0) theta += 2 * Math.PI;
+      const frac = theta / (2 * Math.PI);
+      return Math.max(0, Math.min(RING_FULL_MIN, Math.round(frac * RING_FULL_MIN)));
+    }
+
+    function updateRingVisual(v) {
+      // lightweight update: arc + handle + center text + ring class — no full rerender,
+      // avoids DOM thrash during drag
+      state = state || {};
+      state.setupMinutes = v;
+      const r = document.getElementById('ft-ring-setup');
+      if (!r) return;
+      const R = 80, C = 2 * Math.PI * R;
+      const frac = v > 0 ? Math.min(1, v / RING_FULL_MIN) : 0;
+      const prog = r.querySelector('.prog-c');
+      if (prog) prog.style.strokeDashoffset = (C * (1 - frac)).toFixed(2);
+      // handle
+      let handle = r.querySelector('.handle');
+      if (v > 0) {
+        const theta = -Math.PI/2 + frac * 2 * Math.PI;
+        const hx = 90 + R * Math.cos(theta), hy = 90 + R * Math.sin(theta);
+        if (!handle) {
+          handle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          handle.setAttribute('class', 'handle');
+          handle.setAttribute('r', '7');
+          r.querySelector('svg').appendChild(handle);
+        }
+        handle.setAttribute('cx', hx.toFixed(2));
+        handle.setAttribute('cy', hy.toFixed(2));
+        const tier = tierFor(state.setupClarity);
+        handle.style.fill = tier.color;
+      } else if (handle) {
+        handle.remove();
+      }
+      // empty/breath class toggles
+      r.classList.toggle('breath', v === 0);
+      r.classList.toggle('draggable-on', v > 0);
+      r.classList.toggle('draggable-empty', v === 0);
+      // center text
+      const big = document.getElementById('ft-ring-display');
+      if (big) big.textContent = v > 0 ? fmtMMSS(v * 60) : '00:00';
+      const sub = r.querySelector('.center .sub');
+      if (sub) sub.textContent = v > 0 ? '计划时长' : '拖环设时长 · 或按开始计时';
+    }
+
+    function onMove(ev) {
+      ev.preventDefault();
+      const v = minutesFromEvent(ev);
+      if (v == null) return;
+      if (v !== state.setupMinutes) updateRingVisual(v);
+    }
+    function onUp() {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchend', onUp);
+      const r = document.getElementById('ft-ring-setup');
+      if (r) r.classList.remove('dragging');
+      // full rerender on release — syncs chip active states, CTA text, "快捷时长" label
+      renderPanel();
+      installRingDrag(document.getElementById('ft-panel'));
+    }
+    function onDown(ev) {
+      ev.preventDefault();
+      ring.classList.add('dragging');
+      const v = minutesFromEvent(ev);
+      if (v != null) updateRingVisual(v);
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('touchmove', onMove, { passive: false });
+      window.addEventListener('mouseup', onUp);
+      window.addEventListener('touchend', onUp);
+    }
+    function onDbl() {
+      state = state || {};
+      state.setupMinutes = 0;
+      renderPanel();
+      installRingDrag(document.getElementById('ft-panel'));
+    }
+
+    ring.addEventListener('mousedown', onDown);
+    ring.addEventListener('touchstart', onDown, { passive: false });
+    ring.addEventListener('dblclick', onDbl);
+  }
+
+  function startRun() {
+    // mode derived from setupMinutes: 0 → stopwatch, >0 → countdown
+    const minutes = Number(state && state.setupMinutes != null ? state.setupMinutes : 0);
+    const mode = minutes > 0 ? 'countdown' : 'stopwatch';
+    let plannedMin = 0, plannedSec = null;
+    if (mode === 'countdown') {
+      plannedMin = minutes;
+      plannedSec = plannedMin * 60;
+    }
+    const pre = Number(state.setupClarity != null ? state.setupClarity : 70);
+    const projectId = state.setupProjectId || null;
+    const note = state.setupNote || '';
+    state = {
+      mode,
+      plannedMin: plannedMin || null,
+      plannedSec,
+      startedAt: nowIso(),
+      preClarity: pre,
+      projectId,
+      note,
+      running: true,
+      insights: []
+    };
+    save();
+    toggleFabLabel();
+    renderPanel();
+    updateFocusBar();
+    if (tickHandle) clearInterval(tickHandle);
+    tickHandle = setInterval(tick, 1000);
+  }
+
+  function tick() {
+    if (!state || !state.running) { clearInterval(tickHandle); tickHandle = null; return; }
+    toggleFabLabel();
+    const panel = document.getElementById('ft-panel');
+    if (panel.classList.contains('open')) {
+      const big = panel.querySelector('#ft-big');
+      if (big) {
+        const left = state.mode === 'countdown' ? remainingSec() : elapsedSec();
+        big.textContent = fmtHMS(left);
+      }
+      // update ring
+      const progC = panel.querySelector('.ft-ring .prog-c');
+      if (progC && state.mode === 'countdown' && state.plannedSec) {
+        const R = 80, C = 2 * Math.PI * R;
+        const frac = Math.max(0, Math.min(1, remainingSec() / state.plannedSec));
+        progC.style.strokeDashoffset = (C * (1 - frac)).toFixed(2);
+      }
+      // update elapsed hint on countdown
+      const hint = panel.querySelector('.ft-ring .hint');
+      if (hint && state.mode === 'countdown' && state.plannedSec) {
+        hint.textContent = `计划 ${Math.round(state.plannedSec/60)}m · 已过 ${fmtHMS(elapsedSec())}`;
+      }
+    }
+    if (Math.floor(elapsedSec()) % 15 === 0) updateFocusBar();
+    // auto-finish countdown when it hits 0
+    if (state.mode === 'countdown' && state.plannedSec && remainingSec() <= 0) {
+      finishRun();
+    }
+  }
+
+  function cancelRun() {
+    if (!confirm('放弃这次专注？（不会被记入今日利用率）')) return;
+    state = null;
+    save();
+    toggleFabLabel();
+    closePanel();
+    if (tickHandle) { clearInterval(tickHandle); tickHandle = null; }
+    updateFocusBar();
+  }
+
+  function finishRun() {
+    // freeze snapshot
+    const snapshot = {
+      mode: state.mode,
+      plannedSec: state.plannedSec,
+      actualSec: Math.round(elapsedSec()),
+      startedAt: state.startedAt,
+      endedAt: nowIso(),
+      preClarity: state.preClarity,
+      projectId: state.projectId,
+      note: state.note,
+      insights: (state.insights || []).slice()
+    };
+    state = null;
+    save();
+    toggleFabLabel();
+    if (tickHandle) { clearInterval(tickHandle); tickHandle = null; }
+    openFinishModal(snapshot);
+  }
+
+  function openFinishModal(snap) {
+    const modal = document.getElementById('ft-modal');
+    const projects = (data && data.projects) || [];
+    const projOptions = ['<option value="">— 不挂项目 —</option>']
+      .concat(projects.map(p => `<option value="${p.id}" ${p.id===snap.projectId?'selected':''}>${escapeHtml(p.name)}</option>`))
+      .join('');
+    const mins = Math.round(snap.actualSec / 60);
+    const insights = snap.insights || [];
+    const totalPts = insights.reduce((s,i)=>s+i.points, 0);
+    const insightsHtml = insights.length > 0
+      ? `<div class="ft-field">
+           <div class="label"><span>本次心得</span><span class="val">${insights.length} 条 · 共 +${totalPts}</span></div>
+           <div class="ft-insights" style="margin-top:6px">
+             <div class="items">${insights.map(it => {
+               const proj = projects.find(p => p.id === it.projectId);
+               const pName = proj ? proj.name : '无项目';
+               return `<div class="item">
+                 <span class="txt">${escapeHtml(it.text)}</span>
+                 <span class="proj">${escapeHtml(pName)}</span>
+                 <span class="pts">+${it.points}</span>
+               </div>`;
+             }).join('')}</div>
+           </div>
+         </div>`
+      : '';
+
+    modal.innerHTML = `
+      <div class="ft-modal-card">
+        <div class="ft-modal-head">专注结束 · 填写完成</div>
+        <div class="ft-modal-body">
+          <div class="ft-session-summary">
+            <div><span style="color:var(--text-4)">时段</span> <b>${toTime(snap.startedAt)} – ${toTime(snap.endedAt)}</b></div>
+            <div><span style="color:var(--text-4)">时长</span> <b>${fmtHMS(snap.actualSec)}</b> (${mins} 分钟)</div>
+            <div><span style="color:var(--text-4)">开始时清晰度</span> <b>${snap.preClarity}</b></div>
+            ${snap.note ? `<div><span style="color:var(--text-4)">名称</span> <b>${escapeHtml(snap.note)}</b></div>` : ''}
+          </div>
+          <div class="ft-field">
+            <div class="label"><span>结束时 · 大脑清晰度</span><span class="val" id="ft-post-val">70</span></div>
+            <input type="range" class="ft-slider" id="ft-post" min="0" max="100" step="1" value="70" />
+          </div>
+          <div class="ft-field">
+            <div class="label"><span>挂到哪个项目</span></div>
+            <select id="ft-m-project">${projOptions}</select>
+          </div>
+          ${insightsHtml}
+          <div class="ft-field">
+            <label style="display:flex;gap:8px;align-items:center;font-family:var(--mono);font-size:11.5px;color:var(--text-2);cursor:pointer">
+              <input type="checkbox" id="ft-m-entry" checked />
+              <span>生成今日明细 entry（心得会作为独立 entry 写入）</span>
+            </label>
+          </div>
+          <div class="ft-actions">
+            <button class="ft-btn" data-mact="discard">丢弃</button>
+            <button class="ft-btn primary" data-mact="save">保存</button>
+          </div>
+        </div>
+      </div>
+    `;
+    modal.classList.add('open');
+    modal.querySelector('#ft-post').addEventListener('input', (e) => {
+      modal.querySelector('#ft-post-val').textContent = e.target.value;
+    });
+    modal.addEventListener('click', function onClick(ev) {
+      const b = ev.target.closest('[data-mact]');
+      if (!b) return;
+      const act = b.dataset.mact;
+      if (act === 'discard') {
+        if (!confirm('丢弃这次专注记录？')) return;
+        modal.classList.remove('open');
+        modal.removeEventListener('click', onClick);
+        return;
+      }
+      if (act === 'save') {
+        const post = Number(modal.querySelector('#ft-post').value);
+        const pid = modal.querySelector('#ft-m-project').value || null;
+        const genEntry = modal.querySelector('#ft-m-entry').checked;
+        commitSession({ ...snap, projectId: pid, postClarity: post, genEntry });
+        modal.classList.remove('open');
+        modal.removeEventListener('click', onClick);
+      }
+    });
+  }
+
+  function commitSession(s) {
+    data.today = data.today || {};
+    data.today.focus_sessions = data.today.focus_sessions || [];
+    data.today.entries = data.today.entries || [];
+
+    const sid = 's_' + new Date(s.startedAt).toISOString().replace(/[-:TZ.]/g,'').slice(0,12);
+    const mins = Math.round(s.actualSec / 60);
+    const avg = (s.preClarity + s.postClarity) / 2;
+    const endTime = toTime(s.endedAt);
+    const entryIds = [];
+
+    // 1) Insights → one entry each (hung on its own project, or session project as default)
+    if (s.genEntry && Array.isArray(s.insights) && s.insights.length > 0) {
+      s.insights.forEach((it, i) => {
+        const pid = it.projectId || s.projectId || null;
+        if (!pid) return; // skip orphan insights
+        const eid = 'e_' + new Date(s.endedAt).toISOString().replace(/[-:TZ.]/g,'').slice(0,12) + '_i' + (i+1);
+        entryIds.push(eid);
+        data.today.entries.push({
+          id: eid,
+          time: endTime,
+          task: it.text,
+          project_id: pid,
+          project_delta_pct: 0,
+          points: it.points,
+          source: 'focus_insight'
+        });
+      });
+    }
+
+    // 2) Base session entry (only if no insights AND has project)
+    if (s.genEntry && entryIds.length === 0 && s.projectId) {
+      const eid = 'e_' + new Date(s.endedAt).toISOString().replace(/[-:TZ.]/g,'').slice(0,12);
+      const pts = Math.max(5, Math.round(mins * (avg / 100) * 3));
+      entryIds.push(eid);
+      data.today.entries.push({
+        id: eid,
+        time: endTime,
+        task: s.note || `专注 ${mins}min @ 均清晰度 ${Math.round(avg)}`,
+        project_id: s.projectId,
+        project_delta_pct: 0,
+        points: pts,
+        source: 'focus_timer'
+      });
+    }
+
+    const session = {
+      id: sid,
+      mode: s.mode,
+      planned_sec: s.plannedSec || null,
+      actual_sec: s.actualSec,
+      start_at: s.startedAt,
+      end_at: s.endedAt,
+      pre_clarity: s.preClarity,
+      post_clarity: s.postClarity,
+      project_id: s.projectId || null,
+      entry_ids: entryIds,
+      entry_id_linked: entryIds[0] || null,
+      note: s.note || '',
+      insights: (s.insights || []).map(it => ({
+        id: it.id, text: it.text, points: it.points,
+        project_id: it.projectId || null, at: it.at
+      }))
+    };
+    data.today.focus_sessions.push(session);
+
+    render(data);
+    toggleFabLabel();
+    updateFocusBar();
+  }
+
+  function init(d, c) {
+    data = d; cfg = c;
+    load();
+    // restore live session if running
+    const fab = document.getElementById('ft-fab');
+    fab.addEventListener('click', () => {
+      const panel = document.getElementById('ft-panel');
+      if (panel.classList.contains('open')) closePanel();
+      else openPanel();
+    });
+    const panel = document.getElementById('ft-panel');
+    panel.addEventListener('click', onPanelClick);
+    panel.addEventListener('input', onPanelInput);
+    panel.addEventListener('change', onPanelInput);
+    if (state && state.running) {
+      if (tickHandle) clearInterval(tickHandle);
+      tickHandle = setInterval(tick, 1000);
+    }
+    toggleFabLabel();
+  }
+
+  return { init, getLiveSegment };
+})();
 </script>
 </body>
 </html>

@@ -33,6 +33,25 @@
     "red":    { "total": 220, "research_min": 50, "label": "🔴 冲刺" }
   },
 
+  "focus_pool": {
+    "description": "今日专注时间池. start~end 之间为可用池. Focus Bar 在此区间上渲染.",
+    "start": "09:30",
+    "end":   "18:00"
+  },
+
+  "focus_timer": {
+    "description": "浮窗计时器 + Focus Bar 热力配色. 大脑清晰度 0-100 越高越清晰 (脑雾是其低端表现).",
+    "fog_direction": "higher_is_better",
+    "clarity_tiers": [
+      { "id": "crystal", "label": "极清晰", "min": 80, "color": "oklch(72% 0.13 220)" },
+      { "id": "clear",   "label": "较清晰", "min": 60, "color": "oklch(72% 0.14 150)" },
+      { "id": "normal",  "label": "普通",   "min": 40, "color": "oklch(76% 0.12 110)" },
+      { "id": "foggy",   "label": "脑雾",   "min":  0, "color": "oklch(64% 0.19 35)"  }
+    ],
+    "session_quality_metric": "avg_pre_post",
+    "presets_min": []
+  },
+
   "notion_knowledge_v4": {
     "description": "心得层 v4 Gallery DBs. Claude 按主题路由写入.",
     "parent_page_id": "33c8d2e2-f724-817f-a69e-ed3c5365d155",

@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>life flow · 两个视觉方向</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --text: #111;
+    --text-2: #555;
+    --text-3: #888;
+    --text-4: #b8b8b8;
+    --line: #e8e8e8;
+    --pos: #0e7a59;
+    --pos-bg: #d7efe3;
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Inter, system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0b0c;
+      --surface: #111115;
+      --text: #f2f2f2;
+      --text-2: #b5b5b8;
+      --text-3: #7f7f86;
+      --text-4: #54545c;
+      --line: #1f1f24;
+      --pos: #5dcaa5;
+      --pos-bg: rgba(93, 202, 165, 0.14);
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  .wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  @media (min-width: 768px) { .wrap { padding: 64px 40px 120px; } }
+
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-3);
+  }
+  .topbar b { color: var(--text); font-weight: 500; }
+
+  header.hero {
+    margin-top: 36px;
+  }
+  header.hero .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  header.hero h1 {
+    margin: 14px 0 10px;
+    font-family: var(--sans);
+    font-weight: 500;
+    font-size: clamp(28px, 5vw, 40px);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    max-width: 720px;
+    text-wrap: pretty;
+  }
+  header.hero p {
+    max-width: 640px;
+    color: var(--text-2);
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .section-label {
+    margin-top: 48px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    margin-top: 24px;
+  }
+  @media (min-width: 780px) {
+    .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--surface);
+    text-decoration: none;
+    color: var(--text);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+  .card:hover { transform: translateY(-2px); border-color: var(--text-4); }
+
+  .card .prev {
+    aspect-ratio: 16 / 10;
+    position: relative;
+    border-bottom: 1px solid var(--line);
+    padding: 22px 22px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+  }
+
+  /* preview v1 — editor */
+  .prev.v1 {
+    background: var(--surface);
+  }
+  .prev.v1 .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.5;
+  }
+  .prev.v1 .n {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: clamp(48px, 8vw, 64px);
+    letter-spacing: -0.02em;
+    color: var(--text);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    position: relative;
+  }
+  .prev.v1 .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    position: relative;
+  }
+  .prev.v1 .bars {
+    position: relative;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .prev.v1 .bars .row {
+    display: grid;
+    grid-template-columns: 8px 1fr auto;
+    gap: 8px;
+    align-items: center;
+  }
+  .prev.v1 .bars .row .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+  .prev.v1 .bars .row .t {
+    position: relative; height: 2px; background: var(--line); border-radius: 2px; overflow: hidden;
+  }
+  .prev.v1 .bars .row .t i { position: absolute; inset: 0 auto 0 0; }
+  .prev.v1 .bars .row .p {
+    font-family: var(--mono); font-size: 10px; color: var(--text-3);
+  }
+
+  /* preview v2 — breath */
+  .prev.v2 {
+    background: linear-gradient(180deg, var(--surface), color-mix(in oklch, var(--surface) 97%, var(--text) 3%));
+  }
+  .prev.v2 .big {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: clamp(72px, 14vw, 120px);
+    letter-spacing: -0.04em;
+    color: var(--text);
+    line-height: 0.9;
+    font-variant-numeric: tabular-nums;
+  }
+  .prev.v2 .caption {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .prev.v2 .chip {
+    position: absolute;
+    top: 20px; right: 22px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--pos-bg);
+    color: var(--pos);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .prev.v2 .bars {
+    display: flex; flex-direction: column; gap: 10px;
+    margin-top: 8px;
+  }
+  .prev.v2 .bars .row { display: flex; align-items: center; gap: 10px; }
+  .prev.v2 .bars .row .n { flex:1; font-family: var(--mono); font-size: 10.5px; color: var(--text-3); }
+  .prev.v2 .bars .row .t { flex-basis: 40%; height: 1px; background: var(--line); position: relative; }
+  .prev.v2 .bars .row .t i { position: absolute; inset: 0 auto 0 0; top: -0.5px; height: 2px; }
+  .prev.v2 .bars .row .p { font-family: var(--mono); font-size: 10px; color: var(--text-2); }
+
+  .card .meta {
+    padding: 18px 22px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .card .meta .name {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .card .meta h2 {
+    margin: 0;
+    font-family: var(--sans);
+    font-size: 17px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .card .meta .tag {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-3);
+    letter-spacing: 0.04em;
+  }
+  .card .meta p {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--text-2);
+    line-height: 1.55;
+    text-wrap: pretty;
+  }
+  .card .cta {
+    margin-top: 4px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+  }
+  .card .cta b { color: var(--text); font-weight: 500; }
+  .card .cta .arr { color: var(--text); }
+
+  .notes {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  @media (min-width: 780px) { .notes { grid-template-columns: repeat(3, 1fr); gap: 28px; } }
+  .note {
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text-2);
+    line-height: 1.55;
+  }
+  .note b {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text);
+    font-weight: 500;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .foot {
+    margin-top: 56px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-4);
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <span><b>life</b>/flow · v0.1</span>
+    <span>2 directions</span>
+  </div>
+
+  <header class="hero">
+    <div class="eyebrow">visual exploration</div>
+    <h1>两个视觉方向 · 同一套信息架构</h1>
+    <p>两个原型实现完全相同的三个模块（Hero 对比 · 长期目标 · 今日明细），只在节奏、字号、留白、线条粗细上分野。深浅色自动跟随系统。移动端优先、iPhone 首屏可见 Hero + 3 条进度条。</p>
+  </header>
+
+  <div class="section-label">
+    <span>— prototypes</span>
+    <span>click any card to open</span>
+  </div>
+
+  <div class="cards">
+    <!-- V1 Editor -->
+    <a class="card" href="./Editor.html">
+      <div class="prev v1">
+        <div class="grid"></div>
+        <div>
+          <div class="label">今日积分 · 2026-04-20</div>
+          <div class="n">150<span style="font-size:0.28em;color:var(--text-3);margin-left:6px">分</span></div>
+        </div>
+        <div class="bars">
+          <div class="row"><span class="dot" style="background:#7F77DD"></span><span class="t"><i style="width:85%;background:#7F77DD"></i></span><span class="p">85%</span></div>
+          <div class="row"><span class="dot" style="background:#BA7517"></span><span class="t"><i style="width:73%;background:#BA7517"></i></span><span class="p">73%</span></div>
+          <div class="row"><span class="dot" style="background:#378ADD"></span><span class="t"><i style="width:25%;background:#378ADD"></i></span><span class="p">25%</span></div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="name">
+          <h2>v1 · Editor</h2>
+          <span class="tag">dense · grid · engineering</span>
+        </div>
+        <p>克制、网格、极细线。顶部面包屑、段落编号、角标装饰让页面像一份编辑器文档。信息密度偏高，晨起/晚间快速扫读最优。</p>
+        <div class="cta">
+          <span>type · <b>JetBrains Mono + system-ui</b></span>
+          <span class="arr">→</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- V2 Breath -->
+    <a class="card" href="./Breath.html">
+      <div class="prev v2">
+        <span class="chip">↑ +30</span>
+        <div>
+          <div class="caption">今日积分 · 2026-04-20</div>
+          <div class="big">150</div>
+        </div>
+        <div class="bars">
+          <div class="row"><span class="n">知识库 v4</span><span class="t"><i style="width:85%;background:#7F77DD"></i></span><span class="p">85%</span></div>
+          <div class="row"><span class="n">Lv4 骑士</span><span class="t"><i style="width:73%;background:#BA7517"></i></span><span class="p">73%</span></div>
+          <div class="row"><span class="n">日语 N1</span><span class="t"><i style="width:25%;background:#378ADD"></i></span><span class="p">25%</span></div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="name">
+          <h2>v2 · Breath</h2>
+          <span class="tag">airy · typographic · calm</span>
+        </div>
+        <p>大留白、超大主数字、进度条压到 2px。温纸色底 + 深蓝墨底双模式。数字本身是主角，页面像一本清晨翻开的笔记。</p>
+        <div class="cta">
+          <span>type · <b>JetBrains Mono + system-ui</b></span>
+          <span class="arr">→</span>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="notes">
+    <div class="note">
+      <b>共通决策</b>
+      Hero 数字右上角 +30 小徽章 · 极细进度条 · 浅绿胶囊 Δ 徽章 · 桌面端 Hero 置顶 + 下方两列 · 字号/对齐由 JetBrains Mono + tabular-nums 统一
+    </div>
+    <div class="note">
+      <b>新增细节</b>
+      进度条今日增量浅色高亮（基于项目色 38%–45% mix） · 等级卡下方小进度条（240/500 → 冒险者） · 0% 项目用虚线基线（“待启程”，非“未启动”）
+    </div>
+    <div class="note">
+      <b>三态 Hero 徽章</b>
+      每个原型 Hero 区下方都画出三种样例：<br/>
+      ↑ 比昨日多 30 分（浅绿） · ↓ 比昨日少 10 分（浅橙） · = 与昨日持平（浅灰）
+    </div>
+  </div>
+
+  <div class="foot">
+    <span>flow.wu-happy.com</span>
+    <span>v0.1 · prototypes</span>
+  </div>
+</div>
+</body>
+</html>
