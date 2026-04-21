@@ -1891,6 +1891,14 @@ function render(data) {
   const visibleProjects = projects.filter(p => p.visible !== false);
   const sortedProjects = [...visibleProjects].sort((a,b) => b.pct - a.pct);
 
+  // 今日明细 / 长期目标默认收起：localStorage 显式存 '0' 才展开，其余（含空值）折叠。
+  // 在 render HTML 时就带上 collapsed class → 零闪烁。
+  const _readCollapsed = (k) => {
+    try { return localStorage.getItem(k) !== '0'; } catch(e) { return true; }
+  };
+  const entriesCollapsed  = _readCollapsed('lifeflow_entries_collapsed');
+  const projectsCollapsed = _readCollapsed('lifeflow_projects_collapsed');
+
   // historical rank: % of past days strictly below today's points
   const history = Array.isArray(data.history_points) ? data.history_points : [];
   const rankPct = history.length > 0
@@ -1979,9 +1987,9 @@ function render(data) {
     ${renderFocusBar()}
 
     <div class="belowhero">
-      <!-- ENTRIES (今日明细 — 左侧，主角, 可折叠) -->
-      <section class="section" id="entries-section">
-        <header class="section-head entries-head" data-act="toggle-entries" role="button" tabindex="0" aria-expanded="true">
+      <!-- ENTRIES (今日明细 — 左侧，主角, 可折叠 · 默认收起) -->
+      <section class="section ${entriesCollapsed ? 'collapsed' : ''}" id="entries-section">
+        <header class="section-head entries-head" data-act="toggle-entries" role="button" tabindex="0" aria-expanded="${entriesCollapsed ? 'false' : 'true'}">
           <div class="section-title"><span class="chev-sec" aria-hidden="true">▾</span>今日明细</div>
           <div class="section-meta">${today.entries.length} 条 · ${today.points} 分</div>
         </header>
@@ -1990,9 +1998,9 @@ function render(data) {
         </div>
       </section>
 
-      <!-- PROJECTS (长期目标 — 右侧，可折叠) -->
-      <section class="section" id="projects-section">
-        <header class="section-head entries-head" data-act="toggle-projects" role="button" tabindex="0" aria-expanded="true">
+      <!-- PROJECTS (长期目标 — 右侧，可折叠 · 默认收起) -->
+      <section class="section ${projectsCollapsed ? 'collapsed' : ''}" id="projects-section">
+        <header class="section-head entries-head" data-act="toggle-projects" role="button" tabindex="0" aria-expanded="${projectsCollapsed ? 'false' : 'true'}">
           <div class="section-title"><span class="chev-sec" aria-hidden="true">▾</span>长期目标</div>
           <div class="section-meta">${sortedProjects.length} 项 · 点击展开</div>
         </header>
@@ -2268,18 +2276,14 @@ function bindProjectToggles() {
   });
 }
 
+// Initial collapsed state is set by render() from localStorage to avoid flicker.
+// These binders only wire toggle interaction; localStorage is the source of truth:
+//   '0' = user explicitly expanded, anything else (incl. missing) = collapsed.
 function bindEntriesToggle() {
   const section = document.getElementById('entries-section');
   if (!section) return;
   const head = section.querySelector('.entries-head');
   if (!head) return;
-  // restore persisted state
-  try {
-    if (localStorage.getItem('lifeflow_entries_collapsed') === '1') {
-      section.classList.add('collapsed');
-      head.setAttribute('aria-expanded', 'false');
-    }
-  } catch(e) {}
   const toggle = () => {
     const collapsed = section.classList.toggle('collapsed');
     head.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
@@ -2296,12 +2300,6 @@ function bindProjectsToggle() {
   if (!section) return;
   const head = section.querySelector('.entries-head');
   if (!head) return;
-  try {
-    if (localStorage.getItem('lifeflow_projects_collapsed') === '1') {
-      section.classList.add('collapsed');
-      head.setAttribute('aria-expanded', 'false');
-    }
-  } catch(e) {}
   const toggle = () => {
     const collapsed = section.classList.toggle('collapsed');
     head.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
