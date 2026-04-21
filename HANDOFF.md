@@ -96,22 +96,42 @@
 
 ---
 
-## 6. 部署链路（Cloudflare Pages）
+## 6. 部署链路（Cloudflare Pages + Pages Functions）
+
+两条写入 `data.json` 的链路**并存**，靠 GitHub Contents API 的 `sha` 乐观锁解决并发：
 
 ```
+【主通道 · claude.ai 对话】
 Claude (MCP: Composio Rube)
-  ├─ github_create_or_update_file(repo=hbhggh/lifeflow, path=data.json, content=...)
-  └─ github_create_or_update_file(repo=hbhggh/lifeflow, path=Breath.html, content=...)
+  └─ github_create_or_update_file(repo=hbhggh/lifeflow, path=data.json, content=...)
         │
-        ↓ (master push trigger)
-  Cloudflare Pages build (无 build command，直接 publish 根目录)
+【辅通道 · 浏览器直 push (finishRun 自动)】
+flow.wu-happy.com 前端
+  └─ POST /api/session  { sessions, entries }
         ↓
-  https://lifeflow.pages.dev (或自定义域名)
+  CF Zero Trust Access  (Policy on /api/* → email = 吴昊 Gmail)
+        ↓
+  CF Pages Function  (functions/api/session.js)
+        ├─ GET contents/data.json  (带 sha)
+        ├─ 按 id 去重 merge → 重算 today.points → stringify
+        └─ PUT with sha  (409 则 refetch + retry，最多 3 次)
+        │
+        ↓ 两条通道的终点同样是 master / data.json
+  Cloudflare Pages build (静态 + Functions)
+        ↓
+  https://flow.wu-happy.com/  (静态页 public；/api/* 被 Access 挡住)
 ```
 
-- CF Pages 不需要任何 wrangler / functions。
-- 前端加载时 `fetch('./data.json')` + `fetch('./config.json')`，同源静态文件。
-- 浏览器缓存：建议给 data.json 加 `?t=<timestamp>` 破缓存（如果需要即时刷新）。
+- 静态资源无 build command，直接 publish 根目录；Pages 自动识别 `functions/` 目录下的 Worker。
+- Secrets (CF Pages → Settings → Environment variables)：
+  - `GITHUB_TOKEN` (Secret, 必须) — fine-grained PAT, scope: Repository=`hbhggh/lifeflow`, Permissions=`Contents: Read & Write`
+  - `GITHUB_REPO` (plain, 可选) — 默认 `hbhggh/lifeflow`
+  - `GITHUB_BRANCH` (plain, 可选) — 默认 `master`
+- Access (CF Zero Trust → Access → Applications)：
+  - Type: Self-hosted, Domain: `flow.wu-happy.com`, Path: `/api/*`
+  - Policy: Include → Emails → 你的 Gmail
+- 前端同源 `fetch('./data.json')` + `fetch('./config.json')`，同源静态文件。
+- 缓存：data.json 变化频率高，可给 URL 加 `?t=<ts>` 破 CF 边缘缓存。
 
 ---
 
@@ -130,9 +150,9 @@ Claude (MCP: Composio Rube)
 ## 8. 下一步 roadmap（非必做，供参考）
 
 - [x] ✅ Focus Timer 环形化 — FAB idle 56px pill → running 112×112 圆环进度浮窗（中心 MM:SS + 底部 ⏸/⏹，颜色跟 clarity_tiers，spring 过渡）。新增 `state.paused/pausedAt/totalPausedSec` + `pauseRun/resumeRun`，`elapsedSec()` 自动扣除暂停时长。stopwatch 进度圈默认每 25 分钟一圈，可由 `config.focus_timer.stopwatch_loop_sec` 覆盖。
-- [ ] 给 data.json 加版本号字段防止并发覆写
+- [x] ✅ Focus Timer 结束后自动回写 data.json — `functions/api/session.js` + 前端 `SyncClient` outbox + `POST /api/session`，finishRun → 自动 merge 入 master/data.json（由 CF Access 挡在 /api/*，PAT 作 CF secret，浏览器不存凭据）。断网/失败保留 outbox，下次或手动点 topbar `● 已同步` chip 重试。
+- [ ] 给 data.json 加版本号字段防止并发覆写（SyncClient 已用 GitHub sha，但仍可追加应用层 `schema_version` 检查）
 - [ ] history_points 携带日期戳（当前是纯数字数组，前端靠 today.date 倒推，不够健壮）
-- [ ] Focus Timer 结束后自动生成 entry 并回写 data.json（目前需要手动通过 Claude 补录）
 - [ ] 移动端触屏手势优化（当前 Focus Timer 浮窗在小屏偏大）
 
 ---

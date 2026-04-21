@@ -81,6 +81,11 @@
     }
   },
 
+  "sync": {
+    "description": "浏览器端 SyncClient 把 finishRun 产出的 session+entries 推给这个 endpoint. 同源 POST. 网关端 (CF Pages Function functions/api/session.js) 用 CF secret 里的 fine-grained PAT 代签 GitHub Contents API 写回 data.json. 由 CF Zero Trust Access 挡 /api/*.",
+    "endpoint": "/api/session"
+  },
+
   "meta": {
     "memory_dependencies": [
       "memory#3 (当前总分/Lv/streak, 全局 memory)",

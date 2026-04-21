@@ -109,6 +109,31 @@
   }
   .topbar .meta span + span { margin-left: 14px; padding-left: 14px; border-left: 1px solid var(--line); }
   @media (max-width: 520px) { .topbar .meta .hide-sm { display: none; } }
+  /* Sync status chip — lives in topbar meta, cycles synced / syncing / pending / error. */
+  .sync-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 2px 9px;
+    border-radius: 999px;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+    user-select: none;
+    transition: background 180ms ease, color 180ms ease, opacity 180ms ease;
+  }
+  .sync-chip.synced   { color: var(--text-3); background: transparent; }
+  .sync-chip.synced:hover { color: var(--text-2); }
+  .sync-chip.syncing  { color: var(--text-2); background: var(--track-ghost); }
+  .sync-chip.syncing::before { content: "↻"; display: inline-block; animation: sync-spin 1.1s linear infinite; }
+  .sync-chip.syncing { gap: 6px; }
+  .sync-chip.pending  { color: var(--neg-fg); background: var(--neu-bg); }
+  .sync-chip.pending:hover { background: var(--neg-bg); }
+  .sync-chip.error    { color: var(--neg-fg); background: var(--neg-bg); }
+  .sync-chip.error:hover { filter: brightness(1.04); }
+  .sync-chip.offline  { color: var(--text-4); background: transparent; font-style: italic; }
+  @keyframes sync-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
   /* ======================= */
   /* Hero                    */
@@ -1805,6 +1830,7 @@
     <div class="meta">
       <span class="hide-sm"><span id="meta-user">—</span></span>
       <span><span id="meta-updated">—</span></span>
+      <span><span id="sync-chip" class="sync-chip synced" role="button" tabindex="0" title="点击立即同步">● 已同步</span></span>
     </div>
   </header>
 
@@ -1862,9 +1888,13 @@
   }
 
   window.__CFG__ = cfg;
+  // merge any un-synced outbox items so the UI reflects what the user already recorded,
+  // even before /api/session has had a chance to push them through.
+  SyncClient.mergeIntoData(data);
   window.__DATA__ = data;
   render(data);
   FocusTimer.init(data, cfg);
+  SyncClient.init();
 })();
 
 function fmtUpdated(iso) {
@@ -2350,6 +2380,177 @@ function escapeHtml(s) {
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
   }[c]));
 }
+
+// ——————— Sync Client (outbox → /api/session → GitHub) ———————
+// finishRun 产生的 session + entries 先入 localStorage outbox，再异步 POST /api/session；
+// 网关端（CF Pages Function）代签 fine-grained PAT 写 data.json。断网/Function 故障时
+// outbox 保留到 localStorage，下次打开或手动点同步 chip 再推。
+const SyncClient = (function () {
+  const OUTBOX_KEY   = 'lifeflow_outbox_v1';
+  const STATE_KEY    = 'lifeflow_sync_state_v1'; // { st: 'synced'|'pending'|'syncing'|'error'|'offline', msg, ts }
+  const ENDPOINT     = '/api/session';
+  const RETRY_MS     = 30000;   // idle 背景重试节奏
+  const ONLINE_DELAY = 800;     // 网络恢复后稍等再冲一次
+  let pushing = false;
+  let bgTimer = null;
+  let chipEl  = null;
+
+  function loadOutbox() {
+    try {
+      const o = JSON.parse(localStorage.getItem(OUTBOX_KEY) || 'null');
+      if (o && Array.isArray(o.sessions) && Array.isArray(o.entries)) return o;
+    } catch (e) {}
+    return { sessions: [], entries: [] };
+  }
+  function saveOutbox(o) {
+    try { localStorage.setItem(OUTBOX_KEY, JSON.stringify(o)); } catch (e) {}
+  }
+  function loadState() {
+    try { return JSON.parse(localStorage.getItem(STATE_KEY) || 'null') || {}; }
+    catch (e) { return {}; }
+  }
+  function saveState(st, msg) {
+    try { localStorage.setItem(STATE_KEY, JSON.stringify({ st, msg: msg || null, ts: Date.now() })); }
+    catch (e) {}
+    renderChip();
+  }
+
+  function hasPending() {
+    const o = loadOutbox();
+    return (o.sessions.length + o.entries.length) > 0;
+  }
+  function pendingCount() {
+    const o = loadOutbox();
+    return o.sessions.length + o.entries.length;
+  }
+  function getOutbox() { return loadOutbox(); }
+
+  function enqueue(sessions, entries) {
+    const o = loadOutbox();
+    const haveS = new Set(o.sessions.map(s => s && s.id).filter(Boolean));
+    const haveE = new Set(o.entries.map(e => e && e.id).filter(Boolean));
+    (sessions || []).forEach(s => { if (s && s.id && !haveS.has(s.id)) { o.sessions.push(s); haveS.add(s.id); } });
+    (entries || []).forEach(e => { if (e && e.id && !haveE.has(e.id)) { o.entries.push(e); haveE.add(e.id); } });
+    saveOutbox(o);
+    saveState('pending');
+  }
+
+  function renderChip() {
+    chipEl = chipEl || document.getElementById('sync-chip');
+    if (!chipEl) return;
+    chipEl.classList.remove('synced', 'syncing', 'pending', 'error', 'offline');
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      chipEl.classList.add('offline');
+      chipEl.textContent = '⊘ 离线';
+      chipEl.title = '网络断开 · 恢复后自动重试';
+      return;
+    }
+    if (pushing) {
+      chipEl.classList.add('syncing');
+      chipEl.textContent = '同步中';
+      chipEl.title = '正在推送到 GitHub…';
+      return;
+    }
+    const st = loadState();
+    const n = pendingCount();
+    if (st.st === 'error' && n > 0) {
+      chipEl.classList.add('error');
+      chipEl.textContent = `⚠ ${n} 待同步`;
+      chipEl.title = `上次失败：${st.msg || '未知错误'} · 点击重试`;
+      return;
+    }
+    if (n > 0) {
+      chipEl.classList.add('pending');
+      chipEl.textContent = `○ ${n} 待同步`;
+      chipEl.title = '点击立即同步';
+      return;
+    }
+    chipEl.classList.add('synced');
+    chipEl.textContent = '● 已同步';
+    chipEl.title = st.ts ? `最近同步：${new Date(st.ts).toLocaleTimeString()}` : '';
+  }
+
+  async function push() {
+    if (pushing) return { ok: true, noop: true };
+    const o = loadOutbox();
+    if (o.sessions.length === 0 && o.entries.length === 0) {
+      saveState('synced');
+      return { ok: true, noop: true };
+    }
+    pushing = true; renderChip();
+    try {
+      const resp = await fetch(ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessions: o.sessions, entries: o.entries }),
+        credentials: 'include' // carry CF Access cookie
+      });
+      if (!resp.ok) {
+        const txt = await resp.text().catch(() => '');
+        throw new Error(`HTTP ${resp.status}${txt ? ' · ' + txt.slice(0, 160) : ''}`);
+      }
+      const res = await resp.json().catch(() => ({ ok: false, error: 'non-JSON response' }));
+      if (!res.ok) throw new Error(res.error || 'sync failed');
+      // Success: clear outbox (server already idempotently merged what we sent)
+      saveOutbox({ sessions: [], entries: [] });
+      saveState('synced');
+      return res;
+    } catch (e) {
+      saveState('error', String(e && e.message || e));
+      return { ok: false, error: String(e && e.message || e) };
+    } finally {
+      pushing = false;
+      renderChip();
+    }
+  }
+
+  // Merge the outbox into a data object in-place so UI can show un-synced stuff
+  // immediately on page load (before /api/session comes back).
+  function mergeIntoData(data) {
+    if (!data) return;
+    const o = loadOutbox();
+    if (o.sessions.length === 0 && o.entries.length === 0) return;
+    data.today = data.today || {};
+    data.today.focus_sessions = Array.isArray(data.today.focus_sessions) ? data.today.focus_sessions : [];
+    data.today.entries        = Array.isArray(data.today.entries)        ? data.today.entries        : [];
+    const haveS = new Set(data.today.focus_sessions.map(s => s && s.id).filter(Boolean));
+    const haveE = new Set(data.today.entries.map(e => e && e.id).filter(Boolean));
+    o.sessions.forEach(s => { if (s && s.id && !haveS.has(s.id)) data.today.focus_sessions.push(s); });
+    o.entries.forEach(e => {
+      if (e && e.id && !haveE.has(e.id)) {
+        data.today.entries.push(e);
+        data.today.points = (data.today.points || 0) + (Number(e.points) || 0);
+      }
+    });
+  }
+
+  function init() {
+    chipEl = document.getElementById('sync-chip');
+    renderChip();
+    if (chipEl) {
+      chipEl.addEventListener('click', () => { push(); });
+      chipEl.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); push(); }
+      });
+    }
+    // online/offline pulse
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online',  () => { renderChip(); setTimeout(push, ONLINE_DELAY); });
+      window.addEventListener('offline', () => { renderChip(); });
+    }
+    // startup: if anything is pending, try once immediately.
+    if (hasPending()) setTimeout(push, 120);
+    // idle retry while pending
+    if (bgTimer) clearInterval(bgTimer);
+    bgTimer = setInterval(() => {
+      if (!pushing && hasPending() && (typeof navigator === 'undefined' || navigator.onLine !== false)) {
+        push();
+      }
+    }, RETRY_MS);
+  }
+
+  return { init, enqueue, push, renderChip, hasPending, pendingCount, getOutbox, mergeIntoData };
+})();
 
 // ——————— Focus Timer (floating) ———————
 const FocusTimer = (function () {
@@ -3358,6 +3559,15 @@ const FocusTimer = (function () {
       }))
     };
     data.today.focus_sessions.push(session);
+
+    // hand new stuff to SyncClient — outbox first (never lose data), then fire async push
+    try {
+      const addedEntries = entryIds
+        .map(id => data.today.entries.find(e => e.id === id))
+        .filter(Boolean);
+      SyncClient.enqueue([session], addedEntries);
+      SyncClient.push();
+    } catch (e) { /* SyncClient is a best-effort layer, never block the UI flow */ }
 
     render(data);
     toggleFabLabel();
