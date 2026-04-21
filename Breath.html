@@ -642,8 +642,12 @@
   /* ======================= */
   .ft-fab {
     position: fixed;
-    top: 18px;
-    right: 18px;
+    /* default to the bottom-right — a classic FAB spot that keeps the topbar
+       (incl. sync-chip) unobscured on iPad Safari where the viewport is narrower
+       and our old top-right pill overlapped the meta area. Users can drag the
+       FAB anywhere and the position persists in localStorage. */
+    bottom: 20px;
+    right: 20px;
     z-index: 40;
     display: inline-flex;
     align-items: center;
@@ -657,7 +661,8 @@
     font-family: var(--mono);
     font-size: 12px;
     color: var(--text);
-    cursor: pointer;
+    cursor: grab;
+    touch-action: none; /* we handle pointer events; prevents Safari auto-scroll on FAB */
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     /* spring overshoot for the idle↔running shape change */
     transition:
@@ -668,6 +673,14 @@
       box-shadow 240ms ease,
       transform .12s ease,
       border-color .12s ease;
+  }
+  .ft-fab:active  { cursor: grabbing; }
+  .ft-fab.dragging {
+    cursor: grabbing;
+    opacity: 0.94;
+    /* kill shape-transition during drag so left/top stay 1:1 with the finger */
+    transition: none !important;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.22);
   }
   .ft-fab:hover { border-color: var(--text-3); transform: translateY(-1px); }
   .ft-fab .dot {
@@ -3570,12 +3583,129 @@ const FocusTimer = (function () {
     updateFocusBar();
   }
 
+  // ----- FAB drag + persistent position -----
+  // Goals:
+  //  - iPad Safari default position does not overlap topbar sync-chip
+  //    (we already shifted default to bottom:20 right:20; here we let users
+  //     drag it anywhere and persist the new spot)
+  //  - Drag threshold 6px so normal taps still open the panel
+  //  - Pointer Events unify mouse + touch; touch-action:none on .ft-fab
+  //  - On viewport resize, clamp stored position back on-screen
+  const FAB_POS_KEY = 'lifeflow_fab_pos_v1';
+
+  function clampPos(left, top, fab) {
+    const r = fab.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const w = r.width || 56;
+    const h = r.height || 36;
+    const margin = 4;
+    return {
+      left: Math.max(margin, Math.min(vw - w - margin, left)),
+      top:  Math.max(margin, Math.min(vh - h - margin, top))
+    };
+  }
+
+  function applyFabPos(fab, left, top) {
+    const p = clampPos(left, top, fab);
+    fab.style.left = p.left + 'px';
+    fab.style.top  = p.top  + 'px';
+    fab.style.right  = 'auto';
+    fab.style.bottom = 'auto';
+  }
+
+  function restoreFabPos(fab) {
+    let raw;
+    try { raw = localStorage.getItem(FAB_POS_KEY); } catch (e) { return; }
+    if (!raw) return;
+    let pos;
+    try { pos = JSON.parse(raw); } catch (e) { return; }
+    if (!pos || typeof pos.left !== 'number' || typeof pos.top !== 'number') return;
+    applyFabPos(fab, pos.left, pos.top);
+  }
+
+  function saveFabPos(fab) {
+    const r = fab.getBoundingClientRect();
+    try {
+      localStorage.setItem(FAB_POS_KEY, JSON.stringify({
+        left: Math.round(r.left),
+        top: Math.round(r.top)
+      }));
+    } catch (e) {}
+  }
+
+  function installFabDrag(fab) {
+    const THRESHOLD = 6; // px; below this a pointerup is treated as a click
+    let startX = null, startY = null, fabStartX = 0, fabStartY = 0;
+    let moved = false, pointerId = null;
+
+    function onDown(ev) {
+      // don't hijack pointerdown on the running-state ctrl buttons
+      if (ev.target && ev.target.closest && ev.target.closest('[data-act]')) return;
+      if (pointerId !== null) return; // single active pointer
+      try { fab.setPointerCapture(ev.pointerId); } catch (e) {}
+      pointerId = ev.pointerId;
+      const rect = fab.getBoundingClientRect();
+      startX = ev.clientX; startY = ev.clientY;
+      fabStartX = rect.left; fabStartY = rect.top;
+      moved = false;
+      fab._justDragged = false;
+    }
+    function onMove(ev) {
+      if (pointerId == null || ev.pointerId !== pointerId) return;
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      if (!moved) {
+        if (Math.abs(dx) < THRESHOLD && Math.abs(dy) < THRESHOLD) return;
+        moved = true;
+        fab.classList.add('dragging');
+      }
+      if (ev.cancelable) ev.preventDefault();
+      applyFabPos(fab, fabStartX + dx, fabStartY + dy);
+    }
+    function onUpOrCancel(ev) {
+      if (pointerId == null || ev.pointerId !== pointerId) return;
+      try { fab.releasePointerCapture(pointerId); } catch (e) {}
+      pointerId = null;
+      const wasMoved = moved;
+      moved = false;
+      fab.classList.remove('dragging');
+      if (wasMoved) {
+        saveFabPos(fab);
+        fab._justDragged = true;
+        // cleared on next tick so the impending synthetic click is squelched,
+        // but a later real click still fires.
+        setTimeout(() => { fab._justDragged = false; }, 0);
+      }
+    }
+
+    fab.addEventListener('pointerdown',  onDown);
+    fab.addEventListener('pointermove',  onMove);
+    fab.addEventListener('pointerup',    onUpOrCancel);
+    fab.addEventListener('pointercancel', onUpOrCancel);
+    fab.addEventListener('lostpointercapture', onUpOrCancel);
+
+    // reclamp on viewport change (e.g. iPad rotation, address-bar chrome reflow)
+    const reclamp = () => {
+      const r = fab.getBoundingClientRect();
+      // if inline left/top is set, reclamp; otherwise leave defaults alone
+      if (fab.style.left && fab.style.top) applyFabPos(fab, r.left, r.top);
+    };
+    window.addEventListener('resize', reclamp);
+    window.addEventListener('orientationchange', reclamp);
+  }
+
   function init(d, c) {
     data = d; cfg = c;
     load();
     // restore live session if running
     const fab = document.getElementById('ft-fab');
+    // restore persisted FAB position (clamped to current viewport) before drag binds
+    restoreFabPos(fab);
+    installFabDrag(fab);
     fab.addEventListener('click', (ev) => {
+      // a drag just ended — squelch the synthetic click that follows pointerup
+      if (fab._justDragged) { ev.stopPropagation(); ev.preventDefault(); return; }
       // running-state ctrl buttons take priority; click on them does not open the panel.
       const act = ev.target.closest && ev.target.closest('[data-act]');
       if (act) {
