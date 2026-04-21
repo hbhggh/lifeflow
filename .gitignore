@@ -1,4 +1,16 @@
-__pycache__/
-*.pyc
-.pytest_cache/
-.l2-log
+# 本地/编辑器杂物
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*~
+
+# 项目内部临时目录 (不应进 GitHub)
+scraps/
+uploads/
+
+# Node (未来如果加了工具链)
+node_modules/
+
+# CF Pages 本地调试
+.wrangler/
