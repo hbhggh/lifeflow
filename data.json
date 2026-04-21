@@ -1,6 +1,6 @@
 {
   "schema_version": "0.2",
-  "updated_at": "2026-04-21T02:10:00+09:00",
+  "updated_at": "2026-04-21T08:05:40.500Z",
   "user": {
     "name": "吴昊",
     "level": 3,
@@ -12,7 +12,7 @@
   },
   "today": {
     "date": "2026-04-21",
-    "points": 350,
+    "points": 355,
     "rank_pct": 92,
     "focus_sessions": [
       {
@@ -21,8 +21,8 @@
         "planned_sec": null,
         "actual_sec": 840,
         "start_at": "2026-04-21T10:41:30+09:00",
-        "end_at":   "2026-04-21T10:55:30+09:00",
-        "pre_clarity":  55,
+        "end_at": "2026-04-21T10:55:30+09:00",
+        "pre_clarity": 55,
         "post_clarity": 88,
         "project_id": "graduation",
         "entry_id_linked": "e_20260420_1546",
@@ -34,25 +34,111 @@
         "planned_sec": 5400,
         "actual_sec": 5340,
         "start_at": "2026-04-21T09:40:00+09:00",
-        "end_at":   "2026-04-21T11:10:00+09:00",
-        "pre_clarity":  72,
+        "end_at": "2026-04-21T11:10:00+09:00",
+        "pre_clarity": 72,
         "post_clarity": 85,
         "project_id": "graduation",
         "entry_id_linked": "e_20260420_1610",
         "note": "Flow 4h29m @100% L3架构调通"
+      },
+      {
+        "id": "s_202604210748",
+        "mode": "countdown",
+        "planned_sec": 2580,
+        "actual_sec": 58,
+        "start_at": "2026-04-21T07:48:37.896Z",
+        "end_at": "2026-04-21T07:49:36.333Z",
+        "pre_clarity": 70,
+        "post_clarity": 70,
+        "project_id": "japanese",
+        "entry_ids": [
+          "e_202604210749"
+        ],
+        "entry_id_linked": "e_202604210749",
+        "note": "",
+        "insights": []
       }
     ],
     "entries": [
-      { "time": "11:12", "task": "AI工具探索·Superpower+Zotero MCP", "project_id": "ai_tools_flow", "project_delta_pct": 0.5, "points": 30 },
-      { "time": "11:13", "task": "乔依礼物规划", "project_id": "appearance", "project_delta_pct": 0, "points": 15 },
-      { "time": "13:46", "task": "lifeflow 进度条/清晰度可视化设计", "project_id": "ai_tools_flow", "project_delta_pct": 1.5, "points": 40 },
-      { "time": "13:52", "task": "日记·害怕矛盾(自我觉察)", "project_id": "appearance", "project_delta_pct": 0, "points": 10 },
-      { "time": "15:33", "task": "信息源理论/显示器整理", "project_id": "ai_tools_flow", "project_delta_pct": 0.5, "points": 15 },
-      { "time": "15:46", "task": "费曼学习 14min @ 98%专注", "project_id": "graduation", "project_delta_pct": 0.3, "points": 40 },
-      { "time": "16:01", "task": "快递闲鱼·显示器处理", "project_id": "appearance", "project_delta_pct": 0, "points": 10 },
-      { "time": "16:10", "task": "Flow 4h29m @100% ⭐ L3架构调通+Rube MCP切换+GitHub Gate2解锁", "project_id": "graduation", "project_delta_pct": 2, "points": 130 },
-      { "time": "16:14", "task": "冥想 ×2", "project_id": "streak", "project_delta_pct": 1, "points": 25 },
-      { "time": "16:44", "task": "网页端进度条设计·第二轮", "project_id": "ai_tools_flow", "project_delta_pct": 1.5, "points": 35 }
+      {
+        "time": "11:12",
+        "task": "AI工具探索·Superpower+Zotero MCP",
+        "project_id": "ai_tools_flow",
+        "project_delta_pct": 0.5,
+        "points": 30
+      },
+      {
+        "time": "11:13",
+        "task": "乔依礼物规划",
+        "project_id": "appearance",
+        "project_delta_pct": 0,
+        "points": 15
+      },
+      {
+        "time": "13:46",
+        "task": "lifeflow 进度条/清晰度可视化设计",
+        "project_id": "ai_tools_flow",
+        "project_delta_pct": 1.5,
+        "points": 40
+      },
+      {
+        "time": "13:52",
+        "task": "日记·害怕矛盾(自我觉察)",
+        "project_id": "appearance",
+        "project_delta_pct": 0,
+        "points": 10
+      },
+      {
+        "time": "15:33",
+        "task": "信息源理论/显示器整理",
+        "project_id": "ai_tools_flow",
+        "project_delta_pct": 0.5,
+        "points": 15
+      },
+      {
+        "time": "15:46",
+        "task": "费曼学习 14min @ 98%专注",
+        "project_id": "graduation",
+        "project_delta_pct": 0.3,
+        "points": 40
+      },
+      {
+        "time": "16:01",
+        "task": "快递闲鱼·显示器处理",
+        "project_id": "appearance",
+        "project_delta_pct": 0,
+        "points": 10
+      },
+      {
+        "time": "16:10",
+        "task": "Flow 4h29m @100% ⭐ L3架构调通+Rube MCP切换+GitHub Gate2解锁",
+        "project_id": "graduation",
+        "project_delta_pct": 2,
+        "points": 130
+      },
+      {
+        "time": "16:14",
+        "task": "冥想 ×2",
+        "project_id": "streak",
+        "project_delta_pct": 1,
+        "points": 25
+      },
+      {
+        "time": "16:44",
+        "task": "网页端进度条设计·第二轮",
+        "project_id": "ai_tools_flow",
+        "project_delta_pct": 1.5,
+        "points": 35
+      },
+      {
+        "id": "e_202604210749",
+        "time": "16:49",
+        "task": "专注 1min @ 均清晰度 70",
+        "project_id": "japanese",
+        "project_delta_pct": 0,
+        "points": 5,
+        "source": "focus_timer"
+      }
     ]
   },
   "yesterday": {
@@ -60,16 +146,106 @@
     "points": 150
   },
   "history_points": [
-    85, 92, 110, 75, 140, 160, 95, 130, 108, 175,
-    145, 125, 98, 180, 210, 155, 120, 88, 165, 195,
-    142, 172, 135, 112, 225, 148, 105, 168, 188, 152,
-    115, 132, 178, 95, 205, 128, 158, 118, 142, 185,
-    175, 138, 102, 215, 165, 125, 148, 92, 182, 155,
-    135, 198, 145, 172, 118, 162, 128, 195, 105, 148,
-    168, 135, 112, 228, 155, 178, 122, 165, 148, 192,
-    115, 158, 138, 175, 165, 202, 128, 145, 185, 172,
-    155, 138, 172, 218, 128, 165, 148, 188, 155, 175,
-    168, 195, 158, 178, 142, 165, 185, 172, 205, 168
+    85,
+    92,
+    110,
+    75,
+    140,
+    160,
+    95,
+    130,
+    108,
+    175,
+    145,
+    125,
+    98,
+    180,
+    210,
+    155,
+    120,
+    88,
+    165,
+    195,
+    142,
+    172,
+    135,
+    112,
+    225,
+    148,
+    105,
+    168,
+    188,
+    152,
+    115,
+    132,
+    178,
+    95,
+    205,
+    128,
+    158,
+    118,
+    142,
+    185,
+    175,
+    138,
+    102,
+    215,
+    165,
+    125,
+    148,
+    92,
+    182,
+    155,
+    135,
+    198,
+    145,
+    172,
+    118,
+    162,
+    128,
+    195,
+    105,
+    148,
+    168,
+    135,
+    112,
+    228,
+    155,
+    178,
+    122,
+    165,
+    148,
+    192,
+    115,
+    158,
+    138,
+    175,
+    165,
+    202,
+    128,
+    145,
+    185,
+    172,
+    155,
+    138,
+    172,
+    218,
+    128,
+    165,
+    148,
+    188,
+    155,
+    175,
+    168,
+    195,
+    158,
+    178,
+    142,
+    165,
+    185,
+    172,
+    205,
+    168
   ],
   "projects": [
     {
@@ -80,10 +256,30 @@
       "color": "#D4537E",
       "category": "lifestyle",
       "sub": [
-        { "id": "weight",   "name": "减肥 142→120 斤", "pct": 0, "weight": 25 },
-        { "id": "dress",    "name": "穿着",           "pct": 0, "weight": 25 },
-        { "id": "speech",   "name": "言谈",           "pct": 0, "weight": 25 },
-        { "id": "presence", "name": "性张力",         "pct": 0, "weight": 25 }
+        {
+          "id": "weight",
+          "name": "减肥 142→120 斤",
+          "pct": 0,
+          "weight": 25
+        },
+        {
+          "id": "dress",
+          "name": "穿着",
+          "pct": 0,
+          "weight": 25
+        },
+        {
+          "id": "speech",
+          "name": "言谈",
+          "pct": 0,
+          "weight": 25
+        },
+        {
+          "id": "presence",
+          "name": "性张力",
+          "pct": 0,
+          "weight": 25
+        }
       ]
     },
     {
@@ -94,10 +290,30 @@
       "color": "#378ADD",
       "category": "learning",
       "sub": [
-        { "id": "kana",       "name": "50 音图",               "pct": 0, "weight": 25 },
-        { "id": "vocabulary", "name": "单词(N3→N1 2000+)",      "pct": 0, "weight": 30 },
-        { "id": "grammar",    "name": "语法(N3→N2→N1)",         "pct": 0, "weight": 25 },
-        { "id": "speaking",   "name": "听说·日常交流",          "pct": 0, "weight": 20 }
+        {
+          "id": "kana",
+          "name": "50 音图",
+          "pct": 0,
+          "weight": 25
+        },
+        {
+          "id": "vocabulary",
+          "name": "单词(N3→N1 2000+)",
+          "pct": 0,
+          "weight": 30
+        },
+        {
+          "id": "grammar",
+          "name": "语法(N3→N2→N1)",
+          "pct": 0,
+          "weight": 25
+        },
+        {
+          "id": "speaking",
+          "name": "听说·日常交流",
+          "pct": 0,
+          "weight": 20
+        }
       ]
     },
     {
@@ -108,8 +324,18 @@
       "color": "#1D9E75",
       "category": "research",
       "sub": [
-        { "id": "conference", "name": "会议论文 ×1", "pct": 5, "weight": 50 },
-        { "id": "journal",    "name": "期刊论文 ×1", "pct": 0, "weight": 50 }
+        {
+          "id": "conference",
+          "name": "会议论文 ×1",
+          "pct": 5,
+          "weight": 50
+        },
+        {
+          "id": "journal",
+          "name": "期刊论文 ×1",
+          "pct": 0,
+          "weight": 50
+        }
       ]
     },
     {
@@ -120,13 +346,49 @@
       "color": "#7F77DD",
       "category": "learning",
       "sub": [
-        { "id": "mcp_stack",   "name": "MCP 生态(Rube/Zotero/Superpower)", "pct": 8, "weight": 30 },
-        { "id": "prompt_flow", "name": "Prompt & Flow 工程",               "pct": 5, "weight": 30 },
-        { "id": "tooling",     "name": "工具链整合(Claude/GitHub/编辑器)",  "pct": 3, "weight": 25 },
-        { "id": "dissemin",    "name": "沉淀与分享",                       "pct": 0, "weight": 15 }
+        {
+          "id": "mcp_stack",
+          "name": "MCP 生态(Rube/Zotero/Superpower)",
+          "pct": 8,
+          "weight": 30
+        },
+        {
+          "id": "prompt_flow",
+          "name": "Prompt & Flow 工程",
+          "pct": 5,
+          "weight": 30
+        },
+        {
+          "id": "tooling",
+          "name": "工具链整合(Claude/GitHub/编辑器)",
+          "pct": 3,
+          "weight": 25
+        },
+        {
+          "id": "dissemin",
+          "name": "沉淀与分享",
+          "pct": 0,
+          "weight": 15
+        }
       ]
     },
-    { "id": "knight_lv4", "name": "Lv4 骑士 (等级路线)", "pct": 76, "today_delta_pct": 3, "color": "#BA7517", "category": "gamification", "visible": false },
-    { "id": "streak",     "name": "积分 streak",         "pct": 30, "today_delta_pct": 1, "color": "#BA7517", "category": "gamification", "visible": false }
+    {
+      "id": "knight_lv4",
+      "name": "Lv4 骑士 (等级路线)",
+      "pct": 76,
+      "today_delta_pct": 3,
+      "color": "#BA7517",
+      "category": "gamification",
+      "visible": false
+    },
+    {
+      "id": "streak",
+      "name": "积分 streak",
+      "pct": 30,
+      "today_delta_pct": 1,
+      "color": "#BA7517",
+      "category": "gamification",
+      "visible": false
+    }
   ]
 }
