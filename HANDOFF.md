@@ -129,6 +129,7 @@ Claude (MCP: Composio Rube)
 
 ## 8. 下一步 roadmap（非必做，供参考）
 
+- [x] ✅ Focus Timer 环形化 — FAB idle 56px pill → running 112×112 圆环进度浮窗（中心 MM:SS + 底部 ⏸/⏹，颜色跟 clarity_tiers，spring 过渡）。新增 `state.paused/pausedAt/totalPausedSec` + `pauseRun/resumeRun`，`elapsedSec()` 自动扣除暂停时长。stopwatch 进度圈默认每 25 分钟一圈，可由 `config.focus_timer.stopwatch_loop_sec` 覆盖。
 - [ ] 给 data.json 加版本号字段防止并发覆写
 - [ ] history_points 携带日期戳（当前是纯数字数组，前端靠 today.date 倒推，不够健壮）
 - [ ] Focus Timer 结束后自动生成 entry 并回写 data.json（目前需要手动通过 Claude 补录）

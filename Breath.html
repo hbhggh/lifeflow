@@ -624,6 +624,8 @@
     align-items: center;
     gap: 8px;
     padding: 9px 14px;
+    width: auto;
+    height: auto;
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 999px;
@@ -632,7 +634,15 @@
     color: var(--text);
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    transition: transform .12s ease, border-color .12s ease;
+    /* spring overshoot for the idle↔running shape change */
+    transition:
+      width 240ms cubic-bezier(0.2, 0.9, 0.3, 1.2),
+      height 240ms cubic-bezier(0.2, 0.9, 0.3, 1.2),
+      padding 240ms cubic-bezier(0.2, 0.9, 0.3, 1.2),
+      border-radius 240ms cubic-bezier(0.2, 0.9, 0.3, 1.2),
+      box-shadow 240ms ease,
+      transform .12s ease,
+      border-color .12s ease;
   }
   .ft-fab:hover { border-color: var(--text-3); transform: translateY(-1px); }
   .ft-fab .dot {
@@ -644,6 +654,116 @@
     animation: pulse 2.4s ease-in-out infinite;
   }
   .ft-fab .ft-elapsed { font-variant-numeric: tabular-nums; font-weight: 500; }
+  /* ----- running state: 112×112 ring-progress FAB ----- */
+  .ft-fab.running {
+    width: 112px;
+    height: 112px;
+    padding: 0;
+    border-radius: 50%;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+    display: block;      /* stack ring / center / ctrl with absolute */
+    position: fixed;     /* preserved from idle */
+    overflow: visible;
+  }
+  .ft-fab.running:hover { transform: translateY(-1px); }
+  .ft-fab .ft-fab-pill { display: inline-flex; align-items: center; gap: 8px; }
+  .ft-fab.running .ft-fab-pill { display: none; }
+  .ft-fab .ft-fab-ring,
+  .ft-fab .ft-fab-center,
+  .ft-fab .ft-fab-ctrl { display: none; }
+  .ft-fab.running .ft-fab-ring {
+    display: block;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+    pointer-events: none;
+  }
+  .ft-fab.running .ft-fab-ring .track {
+    fill: none;
+    stroke: var(--track);
+    stroke-width: 6;
+  }
+  .ft-fab.running .ft-fab-ring .prog {
+    fill: none;
+    stroke: var(--c, var(--text));
+    stroke-width: 7;
+    stroke-linecap: round;
+    transition: stroke 300ms ease, stroke-dashoffset 0.9s linear;
+  }
+  .ft-fab.running .ft-fab-ring .head {
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+    pointer-events: none;
+    transition: cx 0.9s linear, cy 0.9s linear, fill 300ms ease;
+  }
+  .ft-fab.running.paused .ft-fab-ring .prog,
+  .ft-fab.running.paused .ft-fab-ring .head {
+    filter: saturate(0.4);
+    opacity: 0.55;
+  }
+  .ft-fab.running .ft-fab-center {
+    display: flex;
+    position: absolute;
+    inset: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding-bottom: 22px;  /* reserve for ctrl strip */
+    pointer-events: none;
+    user-select: none;
+  }
+  .ft-fab.running .ft-fab-center .time {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .ft-fab.running .ft-fab-center .sub {
+    font-family: var(--sans);
+    font-size: 11px;
+    color: var(--text-3);
+    max-width: 82px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.2;
+  }
+  .ft-fab.running.paused .ft-fab-center .time { color: var(--text-3); }
+  .ft-fab.running .ft-fab-ctrl {
+    display: flex;
+    position: absolute;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    gap: 10px;
+    padding: 2px 10px;
+    align-items: center;
+    border-top: 1px solid var(--line-2);
+    background: transparent;
+  }
+  .ft-fab.running .ft-fab-ctrl button {
+    all: unset;
+    cursor: pointer;
+    color: var(--text-2);
+    font-family: var(--sans);
+    font-size: 13px;
+    line-height: 1;
+    padding: 3px 5px;
+    border-radius: 4px;
+    transition: color .15s ease, background .15s ease;
+  }
+  .ft-fab.running .ft-fab-ctrl button:hover {
+    color: var(--text);
+    background: var(--track-ghost);
+  }
+  .ft-fab.running .ft-fab-ctrl button.danger:hover {
+    color: var(--neg-fg);
+  }
 
   .ft-panel {
     position: fixed;
@@ -1700,9 +1820,12 @@
 
 <!-- Floating Focus Timer -->
 <button class="ft-fab" id="ft-fab" type="button" aria-label="专注计时器">
-  <span class="dot"></span>
-  <span id="ft-fab-label">专注计时</span>
-  <span class="ft-elapsed" id="ft-fab-elapsed" style="display:none"></span>
+  <span class="ft-fab-pill">
+    <span class="dot"></span>
+    <span id="ft-fab-label">专注计时</span>
+    <span class="ft-elapsed" id="ft-fab-elapsed" style="display:none"></span>
+  </span>
+  <!-- .ft-fab-ring / .ft-fab-center / .ft-fab-ctrl injected by JS on running state -->
 </button>
 <div class="ft-panel" id="ft-panel" role="dialog" aria-label="专注计时器"></div>
 <div class="ft-modal" id="ft-modal" role="dialog" aria-label="生成今日明细"></div>
@@ -2233,7 +2356,7 @@ function escapeHtml(s) {
 // ——————— Focus Timer (floating) ———————
 const FocusTimer = (function () {
   const LS_KEY = 'lifeflow_focus_timer_v1';
-  let state = null;   // { mode, plannedSec, startedAt, preClarity, projectId, note, running }
+  let state = null;   // { mode, plannedSec, startedAt, preClarity, projectId, note, running, paused, pausedAt, totalPausedSec }
   let tickHandle = null;
   let data = null, cfg = null;
 
@@ -2269,7 +2392,14 @@ const FocusTimer = (function () {
 
   function elapsedSec() {
     if (!state || !state.startedAt) return 0;
-    return (Date.now() - new Date(state.startedAt).getTime()) / 1000;
+    const raw = (Date.now() - new Date(state.startedAt).getTime()) / 1000;
+    const accumulated = state.totalPausedSec || 0;
+    // if currently paused, also subtract the in-progress pause window so
+    // the displayed elapsed freezes while the user is paused.
+    const inPauseNow = (state.paused && state.pausedAt)
+      ? (Date.now() - new Date(state.pausedAt).getTime()) / 1000
+      : 0;
+    return Math.max(0, raw - accumulated - inPauseNow);
   }
   function remainingSec() {
     if (!state || state.mode !== 'countdown' || !state.plannedSec) return 0;
@@ -2285,18 +2415,109 @@ const FocusTimer = (function () {
   }
   function toggleFabLabel() {
     const fab = document.getElementById('ft-fab');
+    if (!fab) return;
     const label = document.getElementById('ft-fab-label');
     const elp = document.getElementById('ft-fab-elapsed');
     if (state && state.running) {
       fab.classList.add('running');
-      label.style.display = 'none';
-      elp.style.display = '';
-      const left = state.mode === 'countdown' ? remainingSec() : elapsedSec();
-      elp.textContent = fmtHMS(left);
+      fab.classList.toggle('paused', !!state.paused);
+      fab.setAttribute('aria-label', state.paused ? '专注已暂停' : '专注中');
+      if (label) label.style.display = 'none';
+      if (elp) elp.style.display = 'none';
+      renderFabRunningDOM(fab);
+      updateFabRunning(fab);
     } else {
       fab.classList.remove('running');
-      label.style.display = '';
-      elp.style.display = 'none';
+      fab.classList.remove('paused');
+      fab.setAttribute('aria-label', '专注计时器');
+      if (label) label.style.display = '';
+      if (elp) elp.style.display = 'none';
+    }
+  }
+
+  // Inject the running-state DOM (ring + center + ctrl) into the FAB once.
+  // Subsequent renders reuse the existing nodes and mutate attributes only.
+  function renderFabRunningDOM(fab) {
+    if (fab.querySelector('.ft-fab-ring')) return;
+    const r = 50;
+    const C = 2 * Math.PI * r;
+    const frag = document.createElement('div');
+    frag.innerHTML = `
+      <svg class="ft-fab-ring" viewBox="0 0 112 112" aria-hidden="true">
+        <circle class="track" cx="56" cy="56" r="${r}"></circle>
+        <circle class="prog"  cx="56" cy="56" r="${r}"
+          stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${C.toFixed(2)}"></circle>
+        <circle class="head" cx="${(56 + r).toFixed(2)}" cy="56" r="4"></circle>
+      </svg>
+      <div class="ft-fab-center">
+        <span class="time">00:00</span>
+        <span class="sub">专注中</span>
+      </div>
+      <div class="ft-fab-ctrl" role="group" aria-label="专注控制">
+        <button type="button" data-act="fab-pause" aria-label="暂停" title="暂停">⏸</button>
+        <button type="button" data-act="fab-finish" class="danger" aria-label="结束并填写" title="结束">⏹</button>
+      </div>
+    `;
+    while (frag.firstElementChild) fab.appendChild(frag.firstElementChild);
+  }
+
+  // Refresh FAB running visuals: arc, head, time, sub, pause-button icon.
+  function updateFabRunning(fab) {
+    const ring = fab.querySelector('.ft-fab-ring');
+    if (!ring) return;
+    const prog = ring.querySelector('.prog');
+    const head = ring.querySelector('.head');
+    const timeEl = fab.querySelector('.ft-fab-center .time');
+    const subEl  = fab.querySelector('.ft-fab-center .sub');
+    const pauseBtn = fab.querySelector('[data-act="fab-pause"]');
+
+    const tier = tierFor(state.preClarity);
+    if (prog) prog.style.stroke = tier.color;
+    if (head) head.style.fill = tier.color;
+
+    // Target duration for progress math:
+    //  countdown → plannedSec; stopwatch → cfg.focus_timer.stopwatch_loop_sec (default 25 min).
+    const cfgFT = (window.__CFG__ && window.__CFG__.focus_timer) || {};
+    const loopSec = Number(cfgFT.stopwatch_loop_sec) > 0 ? Number(cfgFT.stopwatch_loop_sec) : 1500;
+    const target = (state.mode === 'countdown' && state.plannedSec) ? state.plannedSec : loopSec;
+
+    const e = elapsedSec();
+    const progress = target > 0 ? (e / target - Math.floor(e / target)) : 0; // [0, 1)
+    const r = 50;
+    const C = 2 * Math.PI * r;
+    if (prog) prog.style.strokeDashoffset = (C * (1 - progress)).toFixed(2);
+    if (head) {
+      const theta = progress * 2 * Math.PI;
+      head.setAttribute('cx', (56 + r * Math.cos(theta)).toFixed(2));
+      head.setAttribute('cy', (56 + r * Math.sin(theta)).toFixed(2));
+    }
+
+    // center time: MM:SS, or H:MM:SS once ≥ 1h
+    const left = (state.mode === 'countdown' && state.plannedSec)
+      ? Math.max(0, state.plannedSec - e)
+      : e;
+    if (timeEl) timeEl.textContent = left >= 3600 ? fmtHMS(left) : fmtMMSS(left);
+
+    // sub: paused > project name > default
+    let subText = '专注中';
+    if (state.paused) subText = '已暂停';
+    else if (state.projectId && window.__DATA__ && Array.isArray(window.__DATA__.projects)) {
+      const p = window.__DATA__.projects.find(x => x.id === state.projectId);
+      if (p && p.name) subText = p.name;
+    }
+    if (subEl) subEl.textContent = subText;
+
+    // pause button: ⏸ ↔ ▶
+    if (pauseBtn) {
+      if (state.paused) {
+        pauseBtn.textContent = '▶';
+        pauseBtn.setAttribute('aria-label', '继续');
+        pauseBtn.setAttribute('title', '继续');
+      } else {
+        pauseBtn.textContent = '⏸';
+        pauseBtn.setAttribute('aria-label', '暂停');
+        pauseBtn.setAttribute('title', '暂停');
+      }
     }
   }
 
@@ -2892,6 +3113,9 @@ const FocusTimer = (function () {
       projectId,
       note,
       running: true,
+      paused: false,
+      pausedAt: null,
+      totalPausedSec: 0,
       insights: []
     };
     save();
@@ -2936,6 +3160,26 @@ const FocusTimer = (function () {
     if (state.mode === 'countdown' && state.plannedSec && remainingSec() <= 0) {
       finishRun();
     }
+  }
+
+  function pauseRun() {
+    if (!state || !state.running || state.paused) return;
+    state.paused = true;
+    state.pausedAt = nowIso();
+    save();
+    toggleFabLabel();
+  }
+
+  function resumeRun() {
+    if (!state || !state.running || !state.paused) return;
+    if (state.pausedAt) {
+      const dt = (Date.now() - new Date(state.pausedAt).getTime()) / 1000;
+      state.totalPausedSec = (state.totalPausedSec || 0) + dt;
+    }
+    state.paused = false;
+    state.pausedAt = null;
+    save();
+    toggleFabLabel();
   }
 
   function cancelRun() {
@@ -3127,7 +3371,20 @@ const FocusTimer = (function () {
     load();
     // restore live session if running
     const fab = document.getElementById('ft-fab');
-    fab.addEventListener('click', () => {
+    fab.addEventListener('click', (ev) => {
+      // running-state ctrl buttons take priority; click on them does not open the panel.
+      const act = ev.target.closest && ev.target.closest('[data-act]');
+      if (act) {
+        ev.stopPropagation();
+        if (act.dataset.act === 'fab-pause') {
+          if (state && state.paused) resumeRun(); else pauseRun();
+          return;
+        }
+        if (act.dataset.act === 'fab-finish') {
+          finishRun();
+          return;
+        }
+      }
       const panel = document.getElementById('ft-panel');
       if (panel.classList.contains('open')) closePanel();
       else openPanel();
