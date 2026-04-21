@@ -1799,8 +1799,33 @@
     font-size: 14.5px;
     color: var(--pos);
     font-variant-numeric: tabular-nums;
-    padding-top: 1px;
+    padding: 1px 6px;
+    margin: -1px -6px;
+    border-radius: 5px;
     white-space: nowrap;
+    cursor: pointer;
+    transition: background 140ms ease, color 140ms ease, box-shadow 140ms ease;
+    user-select: none;
+  }
+  .entry .pts:hover { background: var(--pos-bg); color: var(--pos-fg); }
+  .entry .pts:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--pos-bg), 0 0 0 3px var(--pos);
+  }
+  .entry .pts.editing {
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--line);
+    cursor: text;
+    color: var(--pos);
+  }
+  .entry .pts.editing:hover { background: var(--surface); }
+  .entry .pts input {
+    all: unset;
+    font: inherit;
+    color: inherit;
+    font-variant-numeric: tabular-nums;
+    width: 3.2em;
+    text-align: right;
   }
 
   .skel {
@@ -2033,7 +2058,7 @@ function render(data) {
           <div class="section-meta">${today.entries.length} 条 · ${today.points} 分</div>
         </header>
         <div class="entries" id="entries-list">
-          ${[...today.entries].reverse().map(e => renderEntry(e, projects)).join('')}
+          ${today.entries.map((e, i) => ({ e, i })).reverse().map(({ e, i }) => renderEntry(e, projects, i)).join('')}
         </div>
       </section>
 
@@ -2053,6 +2078,7 @@ function render(data) {
   bindProjectToggles();
   bindEntriesToggle();
   bindProjectsToggle();
+  bindEntryPtsEdit();
   startFocusClock();
   return; // main.innerHTML already assigned above
 }
@@ -2354,12 +2380,75 @@ function bindProjectsToggle() {
   });
 }
 
-function renderEntry(e, projects) {
+// Inline edit for entry.points — delegated on #entries-list to survive re-renders.
+function bindEntryPtsEdit() {
+  const list = document.getElementById('entries-list');
+  if (!list || list.__ptsEditBound) return;
+  list.__ptsEditBound = true;
+
+  function commit(idx, newVal) {
+    const data = window.__DATA__;
+    if (!data || !data.today || !Array.isArray(data.today.entries)) return;
+    const entry = data.today.entries[idx];
+    if (!entry) return;
+    const v = Math.max(0, Math.round(Number(newVal) || 0));
+    if (v === Number(entry.points)) return; // no-op
+    entry.points = v;
+    // recompute today.points = Σ entries.points (mirror of Function-side logic)
+    data.today.points = data.today.entries.reduce((acc, e) => acc + (Number(e && e.points) || 0), 0);
+    // push the updated entry upstream (Function upserts by id OR (time, task))
+    try { SyncClient.enqueue([], [entry]); SyncClient.push(); } catch (e) {}
+    render(data);
+  }
+
+  function begin(pts) {
+    if (pts.classList.contains('editing')) return;
+    const idx = Number(pts.dataset.entryIdx);
+    const current = pts.textContent.replace(/[^\d.-]/g, '');
+    pts.classList.add('editing');
+    pts.innerHTML = `<input type="number" min="0" step="1" inputmode="numeric" value="${current}" />`;
+    const inp = pts.querySelector('input');
+    inp.focus();
+    inp.select();
+    let committed = false;
+    const done = (save) => {
+      if (committed) return;
+      committed = true;
+      if (save) commit(idx, inp.value);
+      else render(window.__DATA__); // rerender restores the pts text and classes cleanly
+    };
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); done(true); }
+      else if (e.key === 'Escape') { e.preventDefault(); done(false); }
+    });
+    inp.addEventListener('blur', () => done(true));
+    // Don't let the number input's clicks bubble up and trigger `begin` again.
+    inp.addEventListener('click', (e) => e.stopPropagation());
+  }
+
+  list.addEventListener('click', (ev) => {
+    const pts = ev.target.closest('.pts[data-act="edit-pts"]');
+    if (!pts) return;
+    begin(pts);
+  });
+  list.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Enter' && ev.key !== ' ') return;
+    const pts = ev.target.closest('.pts[data-act="edit-pts"]');
+    if (!pts || pts.classList.contains('editing')) return;
+    if (ev.target !== pts) return; // inner input handles its own keys
+    ev.preventDefault();
+    begin(pts);
+  });
+}
+
+function renderEntry(e, projects, idx) {
   const p = projects.find(x => x.id === e.project_id);
   const pname = p ? p.name : e.project_id;
   const color = p ? p.color : '#888';
   const showDelta = e.project_delta_pct > 0;
   const deltaStr = fmtPct(e.project_delta_pct);
+  // pts is a role=button that opens inline edit; data-entry-idx is the index
+  // into data.today.entries (not into the reversed render order).
   return `
     <div class="entry" style="--c:${color}">
       <div class="t">${e.time}</div>
@@ -2374,7 +2463,10 @@ function renderEntry(e, projects) {
             : `<span class="pp zero">+0%</span>`}
         </span>
       </div>
-      <div class="pts">+${e.points}</div>
+      <div class="pts" role="button" tabindex="0"
+           data-act="edit-pts" data-entry-idx="${idx}"
+           aria-label="编辑积分 · 当前 ${e.points}"
+           title="点击编辑积分">+${e.points}</div>
     </div>
   `;
 }
@@ -3417,6 +3509,7 @@ const FocusTimer = (function () {
     save();
     toggleFabLabel();
     if (tickHandle) { clearInterval(tickHandle); tickHandle = null; }
+    closePanel(); // hide the "专注中" panel so the finish modal has the stage
     openFinishModal(snapshot);
   }
 
