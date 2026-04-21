@@ -87,28 +87,42 @@ export async function onRequestPost({ request, env }) {
       data.today.focus_sessions = Array.isArray(data.today.focus_sessions) ? data.today.focus_sessions : [];
       data.today.entries        = Array.isArray(data.today.entries)        ? data.today.entries        : [];
 
-      const existingSessionIds = new Set(data.today.focus_sessions.map(s => s && s.id).filter(Boolean));
-      const existingEntryIds   = new Set(data.today.entries.map(e => e && e.id).filter(Boolean));
-
-      let addedSessions = 0;
+      // Upsert by id (sessions: id only; entries: id OR legacy (time, task) natural key).
+      // "id already present → merge fields in place (incoming wins)" lets the browser
+      // edit already-committed rows (e.g. user re-scoring an entry's points). "id absent
+      // → append". Keeps Function idempotent while supporting edits.
+      let upsertedSessions = 0, addedSessions = 0;
       for (const s of incomingSessions) {
-        if (s && s.id && !existingSessionIds.has(s.id)) {
+        if (!s || !s.id) continue;
+        const idx = data.today.focus_sessions.findIndex(x => x && x.id === s.id);
+        if (idx >= 0) {
+          Object.assign(data.today.focus_sessions[idx], s);
+          upsertedSessions++;
+        } else {
           data.today.focus_sessions.push(s);
-          existingSessionIds.add(s.id);
           addedSessions++;
         }
       }
-      let addedEntries = 0;
+
+      let upsertedEntries = 0, addedEntries = 0;
       for (const e of incomingEntries) {
-        if (e && e.id && !existingEntryIds.has(e.id)) {
+        if (!e) continue;
+        let idx = -1;
+        if (e.id) idx = data.today.entries.findIndex(x => x && x.id === e.id);
+        if (idx < 0 && e.time && e.task) {
+          idx = data.today.entries.findIndex(x => x && !x.id && x.time === e.time && x.task === e.task);
+        }
+        if (idx >= 0) {
+          Object.assign(data.today.entries[idx], e);
+          upsertedEntries++;
+        } else {
           data.today.entries.push(e);
-          existingEntryIds.add(e.id);
           addedEntries++;
         }
       }
 
-      // nothing new after dedupe — treat as success to let client clear outbox
-      if (addedSessions === 0 && addedEntries === 0) {
+      const touched = upsertedSessions + addedSessions + upsertedEntries + addedEntries;
+      if (touched === 0) {
         return json({ ok: true, accepted: { sessions: 0, entries: 0 }, noop: true, sha });
       }
 
@@ -118,7 +132,7 @@ export async function onRequestPost({ request, env }) {
 
       const newContent = JSON.stringify(data, null, 2) + '\n';
       const newContentB64 = b64EncodeUtf8(newContent);
-      const commitMessage = `data: sync ${addedSessions}s+${addedEntries}e from web (auto)`;
+      const commitMessage = `data: sync ${addedSessions}+${upsertedSessions}s · ${addedEntries}+${upsertedEntries}e from web (auto)`;
 
       const putRes = await fetch(putUrl, {
         method: 'PUT',
@@ -143,7 +157,12 @@ export async function onRequestPost({ request, env }) {
       const putData = await putRes.json();
       return json({
         ok: true,
-        accepted: { sessions: addedSessions, entries: addedEntries },
+        accepted: {
+          sessions_added: addedSessions,
+          sessions_upserted: upsertedSessions,
+          entries_added: addedEntries,
+          entries_upserted: upsertedEntries
+        },
         newSha: putData && putData.content && putData.content.sha || null,
         commit: putData && putData.commit && putData.commit.sha || null,
         attempt: attempt + 1
