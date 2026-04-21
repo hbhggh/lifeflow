@@ -1,6 +1,6 @@
 {
   "schema_version": "0.2",
-  "updated_at": "2026-04-21T08:37:04.744Z",
+  "updated_at": "2026-04-21T08:37:10.931Z",
   "user": {
     "name": "吴昊",
     "level": 3,
@@ -12,7 +12,7 @@
   },
   "today": {
     "date": "2026-04-21",
-    "points": 355,
+    "points": 350,
     "rank_pct": 92,
     "focus_sessions": [
       {
@@ -180,7 +180,7 @@
         "task": "专注 1min @ 均清晰度 70",
         "project_id": "japanese",
         "project_delta_pct": 0,
-        "points": 5,
+        "points": 0,
         "source": "focus_timer"
       }
     ]
