@@ -24,8 +24,20 @@
 
 export async function onRequestPost({ request, env }) {
   try {
-    if (!env.GITHUB_TOKEN) {
-      return json({ ok: false, error: 'GITHUB_TOKEN secret not configured in CF Pages' }, 500);
+    // `probe=1` never touches GitHub — use it to debug env / runtime on its own.
+    const url = new URL(request.url);
+    if (url.searchParams.get('probe') === '1') {
+      return tokenProbe(env);
+    }
+
+    const token = String(env.GITHUB_TOKEN || '').trim();
+    if (!token) {
+      return json({ ok: false, error: 'GITHUB_TOKEN secret not configured in CF Pages (or empty after trim)' }, 500);
+    }
+    if (!/^[\x21-\x7e]+$/.test(token)) {
+      // any non-printable-ASCII char would make the Authorization header invalid
+      // and cause a raw CF 502 (Worker throws building the request).
+      return json({ ok: false, error: 'GITHUB_TOKEN contains invalid chars (expected printable ASCII)' }, 500);
     }
 
     const repo   = env.GITHUB_REPO   || 'hbhggh/lifeflow';
@@ -43,7 +55,7 @@ export async function onRequestPost({ request, env }) {
     }
 
     const ghHeaders = {
-      'Authorization': `Bearer ${env.GITHUB_TOKEN}`,
+      'Authorization': `Bearer ${token}`,
       'Accept': 'application/vnd.github+json',
       'X-GitHub-Api-Version': '2022-11-28',
       'User-Agent': 'lifeflow-pages-fn/1.0'
@@ -145,13 +157,49 @@ export async function onRequestPost({ request, env }) {
 }
 
 // Health check — lets the client verify Access + env are wired up without writing.
-export async function onRequestGet({ env }) {
+// `?probe=1` returns token-characteristic diagnostics (never the token itself).
+export async function onRequestGet({ request, env }) {
+  const url = new URL(request.url);
+  if (url.searchParams.get('probe') === '1') {
+    return tokenProbe(env);
+  }
   return json({
     ok: true,
-    hint: 'POST { sessions: [...], entries: [...] } here to merge into data.json.',
+    hint: 'POST { sessions: [...], entries: [...] } here to merge into data.json. Add ?probe=1 for env diagnostics.',
     configured: !!env.GITHUB_TOKEN,
     repo: env.GITHUB_REPO || 'hbhggh/lifeflow',
     branch: env.GITHUB_BRANCH || 'master'
+  });
+}
+
+// Returns token shape without ever exposing the secret itself.
+// Enough to distinguish "token missing / empty / has whitespace / wrong format / looks right but rejected by GitHub".
+function tokenProbe(env) {
+  const raw = String(env.GITHUB_TOKEN || '');
+  const trimmed = raw.trim();
+  const looksLikePat  = trimmed.startsWith('github_pat_');
+  const looksLikeGho  = trimmed.startsWith('gho_');
+  const looksLikeGhs  = trimmed.startsWith('ghs_');
+  const looksLikeGhp  = trimmed.startsWith('ghp_');
+  const kind = looksLikePat ? 'fine-grained PAT' :
+               looksLikeGho ? 'OAuth token' :
+               looksLikeGhs ? 'server-to-server' :
+               looksLikeGhp ? 'classic PAT' : 'unknown';
+  return json({
+    ok: true,
+    probe: true,
+    token_present: raw.length > 0,
+    token_length_raw: raw.length,
+    token_length_trimmed: trimmed.length,
+    whitespace_stripped: raw.length - trimmed.length,
+    ascii_clean: /^[\x21-\x7e]+$/.test(trimmed),
+    prefix_looks_valid: looksLikePat || looksLikeGho || looksLikeGhs || looksLikeGhp,
+    kind,
+    repo: env.GITHUB_REPO || '(default) hbhggh/lifeflow',
+    branch: env.GITHUB_BRANCH || '(default) master',
+    note: looksLikePat
+      ? 'fine-grained PAT expected length ~93 chars (github_pat_ + ~82 body); check token_length_trimmed matches'
+      : 'prefix not recognized; go regenerate a fine-grained PAT with Contents RW on hbhggh/lifeflow'
   });
 }
 
