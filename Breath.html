@@ -1828,8 +1828,6 @@
       <span>v0.1</span>
     </div>
     <div class="meta">
-      <span class="hide-sm"><span id="meta-user">—</span></span>
-      <span><span id="meta-updated">—</span></span>
       <span><span id="sync-chip" class="sync-chip synced" role="button" tabindex="0" title="点击立即同步">● 已同步</span></span>
     </div>
   </header>
@@ -1913,8 +1911,6 @@ function deltaState(today, yest) {
 
 function render(data) {
   const main = document.getElementById('main');
-  document.getElementById('meta-updated').textContent = fmtUpdated(data.updated_at);
-  document.getElementById('meta-user').textContent = data.user.name;
 
   const { today, yesterday, user, projects } = data;
   const d = deltaState(today.points, yesterday.points);
