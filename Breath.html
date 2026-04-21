@@ -2353,8 +2353,8 @@ const FocusTimer = (function () {
 
       const nameVal = state.setupNote || '';
       const nameHtml = nameVal
-        ? `<div class="name-slot" data-act="name-edit" title="点击编辑">${escapeHtml(nameVal)}</div>`
-        : `<div class="name-slot empty" data-act="name-edit" title="点击命名这次专注">命名</div>`;
+        ? `<div class="name-slot" data-act="name-edit" role="button" tabindex="0" aria-label="编辑本次专注的命名 · 当前 ${escapeHtml(nameVal)}" title="点击编辑">${escapeHtml(nameVal)}</div>`
+        : `<div class="name-slot empty" data-act="name-edit" role="button" tabindex="0" aria-label="命名这次专注" title="点击命名这次专注">命名</div>`;
 
       panel.innerHTML = `
         <div class="ft-card">
@@ -2436,8 +2436,8 @@ const FocusTimer = (function () {
       state.insights = state.insights || [];
       const nameShow = state.note || '';
       const nameHtmlRun = nameShow
-        ? `<div class="name-slot" data-act="name-edit" title="点击编辑">${escapeHtml(nameShow)}</div>`
-        : `<div class="name-slot empty" data-act="name-edit" title="点击命名这次专注">命名</div>`;
+        ? `<div class="name-slot" data-act="name-edit" role="button" tabindex="0" aria-label="编辑本次专注的命名 · 当前 ${escapeHtml(nameShow)}" title="点击编辑">${escapeHtml(nameShow)}</div>`
+        : `<div class="name-slot empty" data-act="name-edit" role="button" tabindex="0" aria-label="命名这次专注" title="点击命名这次专注">命名</div>`;
 
       const insightsListHtml = state.insights.length > 0
         ? `<div class="items">${state.insights.map((it, i) => {
@@ -2836,6 +2836,13 @@ const FocusTimer = (function () {
     }
 
     function onDown(ev) {
+      // Don't hijack pointer-downs on interactive children (name slot, inputs,
+      // buttons, [data-act]). Without this, their click bubbles to a panel that
+      // has been re-rendered out from under them on mouseup → onPanelClick misses.
+      if (ev.target && ev.target.closest &&
+          ev.target.closest('.name-slot, button, input, textarea, select, [data-act]')) {
+        return;
+      }
       if (ev.cancelable) ev.preventDefault();
       ring.classList.add('dragging');
       dragLoops = Math.floor(((state && state.setupMinutes) || 0) / RING_FULL_MIN);
@@ -3129,6 +3136,15 @@ const FocusTimer = (function () {
     panel.addEventListener('click', onPanelClick);
     panel.addEventListener('input', onPanelInput);
     panel.addEventListener('change', onPanelInput);
+    // keyboard activation for role=button divs (name-slot)
+    panel.addEventListener('keydown', (ev) => {
+      if (ev.key !== 'Enter' && ev.key !== ' ') return;
+      const slot = ev.target.closest && ev.target.closest('.name-slot');
+      if (!slot || slot.classList.contains('editing')) return;
+      if (ev.target !== slot) return; // inner input handles its own keys
+      ev.preventDefault();
+      beginNameEdit(slot);
+    });
     if (state && state.running) {
       if (tickHandle) clearInterval(tickHandle);
       tickHandle = setInterval(tick, 1000);
