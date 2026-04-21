@@ -1,6 +1,6 @@
 {
   "schema_version": "0.2",
-  "updated_at": "2026-04-21T08:37:10.931Z",
+  "updated_at": "2026-04-21T17:54:45+09:00",
   "user": {
     "name": "吴昊",
     "level": 3,
@@ -105,83 +105,18 @@
     ],
     "entries": [
       {
-        "time": "11:12",
-        "task": "AI工具探索·Superpower+Zotero MCP",
+        "time": "10:43",
+        "task": "上午 lifeflow 在家码·2h50m 100% 专注",
         "project_id": "ai_tools_flow",
-        "project_delta_pct": 0.5,
-        "points": 30
-      },
-      {
-        "time": "11:13",
-        "task": "乔依礼物规划",
-        "project_id": "appearance",
-        "project_delta_pct": 0,
-        "points": 15
-      },
-      {
-        "time": "13:46",
-        "task": "lifeflow 进度条/清晰度可视化设计",
-        "project_id": "ai_tools_flow",
-        "project_delta_pct": 1.5,
-        "points": 40
-      },
-      {
-        "time": "13:52",
-        "task": "日记·害怕矛盾(自我觉察)",
-        "project_id": "appearance",
-        "project_delta_pct": 0,
-        "points": 10
-      },
-      {
-        "time": "15:33",
-        "task": "信息源理论/显示器整理",
-        "project_id": "ai_tools_flow",
-        "project_delta_pct": 0.5,
-        "points": 15
-      },
-      {
-        "time": "15:46",
-        "task": "费曼学习 14min @ 98%专注",
-        "project_id": "graduation",
-        "project_delta_pct": 0.3,
-        "points": 40
-      },
-      {
-        "time": "16:01",
-        "task": "快递闲鱼·显示器处理",
-        "project_id": "appearance",
-        "project_delta_pct": 0,
-        "points": 10
-      },
-      {
-        "time": "16:10",
-        "task": "Flow 4h29m @100% ⭐ L3架构调通+Rube MCP切换+GitHub Gate2解锁",
-        "project_id": "graduation",
         "project_delta_pct": 2,
-        "points": 130
+        "points": 100
       },
       {
-        "time": "16:14",
-        "task": "冥想 ×2",
-        "project_id": "streak",
-        "project_delta_pct": 1,
-        "points": 25
-      },
-      {
-        "time": "16:44",
-        "task": "网页端进度条设计·第二轮",
+        "time": "14:20",
+        "task": "⭐ 下午 lifeflow 里程碑·多设备云端同步+功能增强+保持简洁·正式可用阶段",
         "project_id": "ai_tools_flow",
-        "project_delta_pct": 1.5,
-        "points": 35
-      },
-      {
-        "id": "e_202604210749",
-        "time": "16:49",
-        "task": "专注 1min @ 均清晰度 70",
-        "project_id": "japanese",
-        "project_delta_pct": 0,
-        "points": 0,
-        "source": "focus_timer"
+        "project_delta_pct": 5,
+        "points": 250
       }
     ]
   },
@@ -385,8 +320,8 @@
     {
       "id": "ai_tools_flow",
       "name": "AI 工具 flow",
-      "pct": 4,
-      "today_delta_pct": 4,
+      "pct": 11,
+      "today_delta_pct": 7,
       "color": "#7F77DD",
       "category": "learning",
       "sub": [
