@@ -2520,7 +2520,10 @@ function bindEntryEdit() {
   }
 
   function pushEntry(entry) {
-    try { SyncClient.enqueue([], [entry]); SyncClient.push(); } catch (e) {}
+    try { SyncClient.enqueue([], [entry], []); SyncClient.push(); } catch (e) {}
+  }
+  function pushEntryAndProjects(entry, projects) {
+    try { SyncClient.enqueue([], [entry], projects || []); SyncClient.push(); } catch (e) {}
   }
 
   function attachTextKeybinds(inp, done) {
@@ -2595,10 +2598,33 @@ function bindEntryEdit() {
       if (committed) return;
       committed = true;
       if (save) {
-        const v = sel.value || null;
-        if (v !== (c.entry.project_id || null)) {
-          c.entry.project_id = v;
-          pushEntry(c.entry);
+        const newPid = sel.value || null;
+        const oldPid = c.entry.project_id || null;
+        if (newPid !== oldPid) {
+          const deltaPct = Number(c.entry.project_delta_pct || 0);
+          const touched = [];
+          const projs = c.data.projects || [];
+          // move this entry's delta contribution from old project → new project
+          if (deltaPct > 0) {
+            if (oldPid) {
+              const oldProj = projs.find(p => p && p.id === oldPid);
+              if (oldProj) {
+                oldProj.pct             = (Number(oldProj.pct)             || 0) - deltaPct;
+                oldProj.today_delta_pct = (Number(oldProj.today_delta_pct) || 0) - deltaPct;
+                touched.push(oldProj);
+              }
+            }
+            if (newPid) {
+              const newProj = projs.find(p => p && p.id === newPid);
+              if (newProj) {
+                newProj.pct             = (Number(newProj.pct)             || 0) + deltaPct;
+                newProj.today_delta_pct = (Number(newProj.today_delta_pct) || 0) + deltaPct;
+                touched.push(newProj);
+              }
+            }
+          }
+          c.entry.project_id = newPid;
+          pushEntryAndProjects(c.entry, touched);
         }
       }
       render(window.__DATA__);
@@ -2626,9 +2652,22 @@ function bindEntryEdit() {
       if (save) {
         const raw = Number(inp.value);
         const v = Math.max(0, Number.isFinite(raw) ? raw : 0);
-        if (v !== Number(c.entry.project_delta_pct || 0)) {
+        const oldPct = Number(c.entry.project_delta_pct || 0);
+        if (v !== oldPct) {
+          const delta = v - oldPct;
           c.entry.project_delta_pct = v;
-          pushEntry(c.entry);
+          // propagate delta to the linked project (pct + today_delta_pct)
+          const touched = [];
+          const projId = c.entry.project_id;
+          if (projId) {
+            const proj = (c.data.projects || []).find(p => p && p.id === projId);
+            if (proj) {
+              proj.pct             = (Number(proj.pct)             || 0) + delta;
+              proj.today_delta_pct = (Number(proj.today_delta_pct) || 0) + delta;
+              touched.push(proj);
+            }
+          }
+          pushEntryAndProjects(c.entry, touched);
         }
       }
       render(window.__DATA__);
@@ -2725,9 +2764,15 @@ const SyncClient = (function () {
   function loadOutbox() {
     try {
       const o = JSON.parse(localStorage.getItem(OUTBOX_KEY) || 'null');
-      if (o && Array.isArray(o.sessions) && Array.isArray(o.entries)) return o;
+      if (o && Array.isArray(o.sessions) && Array.isArray(o.entries)) {
+        return {
+          sessions: o.sessions,
+          entries:  o.entries,
+          projects: Array.isArray(o.projects) ? o.projects : []
+        };
+      }
     } catch (e) {}
-    return { sessions: [], entries: [] };
+    return { sessions: [], entries: [], projects: [] };
   }
   function saveOutbox(o) {
     try { localStorage.setItem(OUTBOX_KEY, JSON.stringify(o)); } catch (e) {}
@@ -2744,20 +2789,31 @@ const SyncClient = (function () {
 
   function hasPending() {
     const o = loadOutbox();
-    return (o.sessions.length + o.entries.length) > 0;
+    return (o.sessions.length + o.entries.length + o.projects.length) > 0;
   }
   function pendingCount() {
     const o = loadOutbox();
-    return o.sessions.length + o.entries.length;
+    return o.sessions.length + o.entries.length + o.projects.length;
   }
   function getOutbox() { return loadOutbox(); }
 
-  function enqueue(sessions, entries) {
+  // enqueue is last-write-wins per id: if a project/entry with the same id is
+  // already in the outbox, the fields merge (incoming wins). This lets the
+  // frontend push a partial {id, pct, today_delta_pct} patch and the Function
+  // will Object.assign it onto the remote record.
+  function enqueue(sessions, entries, projects) {
     const o = loadOutbox();
-    const haveS = new Set(o.sessions.map(s => s && s.id).filter(Boolean));
-    const haveE = new Set(o.entries.map(e => e && e.id).filter(Boolean));
-    (sessions || []).forEach(s => { if (s && s.id && !haveS.has(s.id)) { o.sessions.push(s); haveS.add(s.id); } });
-    (entries || []).forEach(e => { if (e && e.id && !haveE.has(e.id)) { o.entries.push(e); haveE.add(e.id); } });
+    const mergeById = (arr, incoming) => {
+      (incoming || []).forEach(item => {
+        if (!item || !item.id) return;
+        const idx = arr.findIndex(x => x && x.id === item.id);
+        if (idx >= 0) Object.assign(arr[idx], item);
+        else arr.push(item);
+      });
+    };
+    mergeById(o.sessions, sessions);
+    mergeById(o.entries,  entries);
+    mergeById(o.projects, projects);
     saveOutbox(o);
     saveState('pending');
   }
@@ -2800,7 +2856,7 @@ const SyncClient = (function () {
   async function push() {
     if (pushing) return { ok: true, noop: true };
     const o = loadOutbox();
-    if (o.sessions.length === 0 && o.entries.length === 0) {
+    if (o.sessions.length === 0 && o.entries.length === 0 && o.projects.length === 0) {
       saveState('synced');
       return { ok: true, noop: true };
     }
@@ -2815,6 +2871,7 @@ const SyncClient = (function () {
         body: JSON.stringify({
           sessions: o.sessions,
           entries: o.entries,
+          projects: o.projects,
           today_date: todayDate
         }),
         credentials: 'include' // carry CF Access cookie
@@ -2826,7 +2883,7 @@ const SyncClient = (function () {
       const res = await resp.json().catch(() => ({ ok: false, error: 'non-JSON response' }));
       if (!res.ok) throw new Error(res.error || 'sync failed');
       // Success: clear outbox (server already idempotently merged what we sent)
-      saveOutbox({ sessions: [], entries: [] });
+      saveOutbox({ sessions: [], entries: [], projects: [] });
       saveState('synced');
       return res;
     } catch (e) {
@@ -2843,18 +2900,34 @@ const SyncClient = (function () {
   function mergeIntoData(data) {
     if (!data) return;
     const o = loadOutbox();
-    if (o.sessions.length === 0 && o.entries.length === 0) return;
+    if (o.sessions.length === 0 && o.entries.length === 0 && o.projects.length === 0) return;
     data.today = data.today || {};
     data.today.focus_sessions = Array.isArray(data.today.focus_sessions) ? data.today.focus_sessions : [];
     data.today.entries        = Array.isArray(data.today.entries)        ? data.today.entries        : [];
+    data.projects             = Array.isArray(data.projects)             ? data.projects             : [];
     const haveS = new Set(data.today.focus_sessions.map(s => s && s.id).filter(Boolean));
     const haveE = new Set(data.today.entries.map(e => e && e.id).filter(Boolean));
-    o.sessions.forEach(s => { if (s && s.id && !haveS.has(s.id)) data.today.focus_sessions.push(s); });
+    o.sessions.forEach(s => {
+      if (!s || !s.id) return;
+      const idx = data.today.focus_sessions.findIndex(x => x && x.id === s.id);
+      if (idx >= 0) Object.assign(data.today.focus_sessions[idx], s);
+      else if (!haveS.has(s.id)) data.today.focus_sessions.push(s);
+    });
     o.entries.forEach(e => {
-      if (e && e.id && !haveE.has(e.id)) {
+      if (!e || !e.id) return;
+      const idx = data.today.entries.findIndex(x => x && x.id === e.id);
+      if (idx >= 0) {
+        Object.assign(data.today.entries[idx], e);
+      } else if (!haveE.has(e.id)) {
         data.today.entries.push(e);
         data.today.points = (data.today.points || 0) + (Number(e.points) || 0);
       }
+    });
+    o.projects.forEach(p => {
+      if (!p || !p.id) return;
+      const idx = data.projects.findIndex(x => x && x.id === p.id);
+      if (idx >= 0) Object.assign(data.projects[idx], p);
+      else data.projects.push(p);
     });
   }
 

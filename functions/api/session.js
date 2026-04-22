@@ -50,14 +50,15 @@ export async function onRequestPost({ request, env }) {
 
     const incomingSessions = Array.isArray(payload.sessions) ? payload.sessions : [];
     const incomingEntries  = Array.isArray(payload.entries)  ? payload.entries  : [];
+    const incomingProjects = Array.isArray(payload.projects) ? payload.projects : [];
     // Client tells us what *today* is from the device's perspective (JST/CST/whatever
     // the user is in). We never trust server-side Date() for the day boundary —
     // CF edges can be anywhere. Validate shape YYYY-MM-DD before use.
     const clientTodayRaw = typeof payload.today_date === 'string' ? payload.today_date.trim() : '';
     const clientToday = /^\d{4}-\d{2}-\d{2}$/.test(clientTodayRaw) ? clientTodayRaw : '';
-    if (incomingSessions.length === 0 && incomingEntries.length === 0 && !clientToday) {
+    if (incomingSessions.length === 0 && incomingEntries.length === 0 && incomingProjects.length === 0 && !clientToday) {
       // pure no-op push (nothing to write, no date hint either) — succeed silently
-      return json({ ok: true, accepted: { sessions: 0, entries: 0 }, noop: true });
+      return json({ ok: true, accepted: { sessions: 0, entries: 0, projects: 0 }, noop: true });
     }
 
     const ghHeaders = {
@@ -151,9 +152,27 @@ export async function onRequestPost({ request, env }) {
         }
       }
 
-      const touched = upsertedSessions + addedSessions + upsertedEntries + addedEntries;
+      // Projects: upsert the long-term goal list. Used by the frontend to keep
+      // project.pct / project.today_delta_pct in sync whenever the user edits
+      // entry.project_delta_pct or moves an entry between projects. Schema
+      // unchanged — we just accept partial patches on existing rows.
+      data.projects = Array.isArray(data.projects) ? data.projects : [];
+      let upsertedProjects = 0, addedProjects = 0;
+      for (const p of incomingProjects) {
+        if (!p || !p.id) continue;
+        const idx = data.projects.findIndex(x => x && x.id === p.id);
+        if (idx >= 0) {
+          Object.assign(data.projects[idx], p);
+          upsertedProjects++;
+        } else {
+          data.projects.push(p);
+          addedProjects++;
+        }
+      }
+
+      const touched = upsertedSessions + addedSessions + upsertedEntries + addedEntries + upsertedProjects + addedProjects;
       if (touched === 0 && !rolled) {
-        return json({ ok: true, accepted: { sessions: 0, entries: 0 }, noop: true, sha });
+        return json({ ok: true, accepted: { sessions: 0, entries: 0, projects: 0 }, noop: true, sha });
       }
 
       // recompute today.points consistent with frontend renderer
@@ -162,9 +181,10 @@ export async function onRequestPost({ request, env }) {
 
       const newContent = JSON.stringify(data, null, 2) + '\n';
       const newContentB64 = b64EncodeUtf8(newContent);
+      const syncSummary = `${addedSessions}+${upsertedSessions}s · ${addedEntries}+${upsertedEntries}e · ${addedProjects}+${upsertedProjects}p`;
       const commitMessage = rolled
-        ? `data: rollover to ${clientToday} + sync ${addedSessions}+${upsertedSessions}s · ${addedEntries}+${upsertedEntries}e from web (auto)`
-        : `data: sync ${addedSessions}+${upsertedSessions}s · ${addedEntries}+${upsertedEntries}e from web (auto)`;
+        ? `data: rollover to ${clientToday} + sync ${syncSummary} from web (auto)`
+        : `data: sync ${syncSummary} from web (auto)`;
 
       const putRes = await fetch(putUrl, {
         method: 'PUT',
@@ -195,7 +215,9 @@ export async function onRequestPost({ request, env }) {
           sessions_added: addedSessions,
           sessions_upserted: upsertedSessions,
           entries_added: addedEntries,
-          entries_upserted: upsertedEntries
+          entries_upserted: upsertedEntries,
+          projects_added: addedProjects,
+          projects_upserted: upsertedProjects
         },
         newSha: putData && putData.content && putData.content.sha || null,
         commit: putData && putData.commit && putData.commit.sha || null,
