@@ -1,6 +1,6 @@
 {
   "schema_version": "0.2",
-  "updated_at": "2026-04-22T02:38:55.067Z",
+  "updated_at": "2026-04-22T03:10:12.873Z",
   "user": {
     "name": "吴昊",
     "level": 3,
@@ -62,7 +62,7 @@
         "time": "11:38",
         "task": "--6",
         "project_id": "ai_tools_flow",
-        "project_delta_pct": 0,
+        "project_delta_pct": 2,
         "points": 15,
         "source": "focus_insight"
       }
