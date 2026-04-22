@@ -1,6 +1,6 @@
 {
   "schema_version": "0.2",
-  "updated_at": "2026-04-22T02:11:28.871Z",
+  "updated_at": "2026-04-22T02:38:24.685Z",
   "user": {
     "name": "吴昊",
     "level": 3,
@@ -11,144 +11,31 @@
     "streak_days": 4
   },
   "today": {
-    "date": "2026-04-21",
-    "points": 578,
+    "date": "2026-04-22",
+    "points": 0,
     "rank_pct": 92,
     "focus_sessions": [
       {
-        "id": "s_20260421_1041",
-        "mode": "stopwatch",
-        "planned_sec": null,
-        "actual_sec": 840,
-        "start_at": "2026-04-21T10:41:30+09:00",
-        "end_at": "2026-04-21T10:55:30+09:00",
-        "pre_clarity": 55,
-        "post_clarity": 88,
-        "project_id": "graduation",
-        "entry_id_linked": "e_20260420_1546",
-        "note": "费曼学习 14min @ 98%专注"
-      },
-      {
-        "id": "s_20260421_0940",
-        "mode": "countdown",
-        "planned_sec": 5400,
-        "actual_sec": 5340,
-        "start_at": "2026-04-21T09:40:00+09:00",
-        "end_at": "2026-04-21T11:10:00+09:00",
-        "pre_clarity": 72,
-        "post_clarity": 85,
-        "project_id": "graduation",
-        "entry_id_linked": "e_20260420_1610",
-        "note": "Flow 4h29m @100% L3架构调通"
-      },
-      {
-        "id": "s_202604210748",
-        "mode": "countdown",
-        "planned_sec": 2580,
-        "actual_sec": 58,
-        "start_at": "2026-04-21T07:48:37.896Z",
-        "end_at": "2026-04-21T07:49:36.333Z",
-        "pre_clarity": 70,
-        "post_clarity": 70,
-        "project_id": "japanese",
-        "entry_ids": [
-          "e_202604210749"
-        ],
-        "entry_id_linked": "e_202604210749",
-        "note": "",
-        "insights": []
-      },
-      {
-        "id": "probe_1776758823577",
-        "mode": "countdown",
-        "actual_sec": 60,
-        "start_at": "2026-04-21T08:07:03.577Z",
-        "end_at": "2026-04-21T08:07:03.577Z",
-        "pre_clarity": 70,
-        "post_clarity": 70,
-        "project_id": null,
-        "entry_ids": [],
-        "entry_id_linked": null,
-        "note": "probe from console",
-        "insights": []
-      },
-      {
-        "id": "s_202604210808",
+        "id": "s_202604220229",
         "mode": "countdown",
         "planned_sec": 2700,
-        "actual_sec": 5,
-        "start_at": "2026-04-21T08:08:29.635Z",
-        "end_at": "2026-04-21T08:08:35.118Z",
+        "actual_sec": 535,
+        "start_at": "2026-04-22T02:29:28.040Z",
+        "end_at": "2026-04-22T02:38:23.269Z",
         "pre_clarity": 70,
         "post_clarity": 70,
         "project_id": null,
         "entry_ids": [],
         "entry_id_linked": null,
         "note": "",
-        "insights": []
-      },
-      {
-        "id": "s_202604210836",
-        "mode": "countdown",
-        "planned_sec": 9180,
-        "actual_sec": 12,
-        "start_at": "2026-04-21T08:36:50.162Z",
-        "end_at": "2026-04-21T08:37:02.011Z",
-        "pre_clarity": 40,
-        "post_clarity": 70,
-        "project_id": null,
-        "entry_ids": [],
-        "entry_id_linked": null,
-        "note": "",
-        "insights": []
-      },
-      {
-        "id": "s_202604220035",
-        "mode": "countdown",
-        "planned_sec": 7200,
-        "actual_sec": 5712,
-        "start_at": "2026-04-22T00:35:52.480Z",
-        "end_at": "2026-04-22T02:11:04.962Z",
-        "pre_clarity": 70,
-        "post_clarity": 90,
-        "project_id": "japanese",
-        "entry_ids": [
-          "e_202604220211"
-        ],
-        "entry_id_linked": "e_202604220211",
-        "note": "日语学习",
         "insights": []
       }
     ],
-    "entries": [
-      {
-        "time": "10:43",
-        "task": "上午 lifeflow 在家码·2h50m 100% 专注",
-        "project_id": "ai_tools_flow",
-        "project_delta_pct": 2,
-        "points": 100
-      },
-      {
-        "time": "14:20",
-        "task": "⭐ 下午 lifeflow 里程碑·多设备云端同步+功能增强+保持简洁·正式可用阶段",
-        "project_id": "ai_tools_flow",
-        "project_delta_pct": 5,
-        "points": 250
-      },
-      {
-        "id": "e_202604220211",
-        "time": "11:11",
-        "task": "日语学习",
-        "project_id": "japanese",
-        "project_delta_pct": 0,
-        "points": 228,
-        "source": "focus_timer"
-      }
-    ]
+    "entries": []
   },
   "yesterday": {
-    "date": "2026-04-20",
-    "points": 150
+    "date": "2026-04-21",
+    "points": 578
   },
   "history_points": [
     85,
@@ -250,7 +137,8 @@
     185,
     172,
     205,
-    168
+    168,
+    578
   ],
   "projects": [
     {
