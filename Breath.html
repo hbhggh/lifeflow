@@ -801,34 +801,39 @@
     border-radius: 4px;
     transition: color .15s ease, background .15s ease;
   }
-  /* resize grip — only visible in running state */
-  .ft-fab .ft-fab-resize { display: none; }
-  .ft-fab.running .ft-fab-resize {
-    display: flex;
-    position: absolute;
-    /* anchor the grip inside the circle at ~45° from center (right+bottom 14%
-       puts it safely inside a border-radius:50% FAB at any size). */
-    right:  calc(var(--fab-size) * 0.14);
-    bottom: calc(var(--fab-size) * 0.14);
-    width:  clamp(16px, calc(var(--fab-size) * 0.15), 26px);
-    height: clamp(16px, calc(var(--fab-size) * 0.15), 26px);
-    align-items: center;
-    justify-content: center;
-    color: var(--text-3);
-    font-size: clamp(12px, calc(var(--fab-size) * 0.12), 18px);
-    line-height: 1;
-    opacity: 0.55;
+  /* Double-tap the running FAB → it enters a "selected" resize mode.
+     Ring of breath around the circle + cursor swap. Drag the body to scale.
+     Double-tap again / Esc / tap outside → exit. */
+  .ft-fab.resize-mode {
     cursor: nwse-resize;
-    touch-action: none;
-    user-select: none;
-    border-radius: 4px;
-    /* faint backing makes it readable on any tier color of the arc underneath */
-    background: var(--track-ghost);
-    transition: opacity 160ms ease, color 160ms ease, background 160ms ease;
-    z-index: 2; /* above the svg ring which has pointer-events: none anyway */
+    box-shadow:
+      0 12px 32px rgba(0,0,0,0.18),
+      0 0 0 2px var(--bg),
+      0 0 0 4px var(--text-2);
+    animation: fab-resize-mode-pulse 1.8s ease-in-out infinite;
   }
-  .ft-fab.running .ft-fab-resize:hover { opacity: 1; color: var(--text-2); background: var(--track-ghost); }
-  .ft-fab.resizing .ft-fab-resize { opacity: 1; color: var(--text); }
+  @keyframes fab-resize-mode-pulse {
+    0%, 100% {
+      box-shadow:
+        0 12px 32px rgba(0,0,0,0.18),
+        0 0 0 2px var(--bg),
+        0 0 0 4px var(--text-2);
+    }
+    50% {
+      box-shadow:
+        0 14px 36px rgba(0,0,0,0.22),
+        0 0 0 2px var(--bg),
+        0 0 0 6px var(--text);
+    }
+  }
+  /* while actually dragging to resize, freeze the pulse + strongest ring */
+  .ft-fab.resize-mode.resizing {
+    animation: none;
+    box-shadow:
+      0 14px 36px rgba(0,0,0,0.22),
+      0 0 0 2px var(--bg),
+      0 0 0 4px var(--text);
+  }
   .ft-fab.running .ft-fab-ctrl button:hover {
     color: var(--text);
     background: var(--track-ghost);
@@ -2971,17 +2976,23 @@ const FocusTimer = (function () {
     }
   }
 
-  // Inject the running-state DOM (ring + center + ctrl + resize grip) into
-  // the FAB once. Subsequent renders reuse the existing nodes and only mutate
-  // attributes. If any required slot is missing (older build left an incomplete
-  // DOM behind while a session was live across an upgrade), we wipe + re-inject.
+  // Inject the running-state DOM (ring + center + ctrl) into the FAB once.
+  // Subsequent renders reuse the existing nodes and only mutate attributes.
+  // If any required slot is missing (older build left an incomplete DOM
+  // behind while a session was live across an upgrade), we wipe + re-inject.
+  // Resize is triggered by a double-tap on the FAB body (no visible grip).
   function renderFabRunningDOM(fab) {
     const hasAll =
       fab.querySelector('.ft-fab-ring') &&
       fab.querySelector('.ft-fab-center') &&
-      fab.querySelector('.ft-fab-ctrl') &&
-      fab.querySelector('.ft-fab-resize');
-    if (hasAll) return;
+      fab.querySelector('.ft-fab-ctrl');
+    if (hasAll) {
+      // Legacy: an older build may have injected .ft-fab-resize (visible corner
+      // grip). It's removed here so the body is clean for the double-tap gesture.
+      const staleGrip = fab.querySelector('.ft-fab-resize');
+      if (staleGrip) staleGrip.remove();
+      return;
+    }
     // partial / legacy DOM → remove every running-only slot so the re-inject
     // below starts from a clean slate; idle pill content (.ft-fab-pill) is
     // left alone.
@@ -3005,8 +3016,6 @@ const FocusTimer = (function () {
         <button type="button" data-act="fab-pause" aria-label="暂停" title="暂停">⏸</button>
         <button type="button" data-act="fab-finish" class="danger" aria-label="结束并填写" title="结束">⏹</button>
       </div>
-      <div class="ft-fab-resize" role="slider" tabindex="0"
-           aria-label="调整浮窗尺寸" title="拖动调整浮窗大小">⇲</div>
     `;
     while (frag.firstElementChild) fab.appendChild(frag.firstElementChild);
   }
@@ -4101,34 +4110,100 @@ const FocusTimer = (function () {
   }
 
   function installFabDrag(fab) {
-    const THRESHOLD = 6; // px; below this a pointerup is treated as a click
-    let startX = null, startY = null, fabStartX = 0, fabStartY = 0;
-    let moved = false, pointerId = null;
+    // One pointer handler runs two separate gestures depending on fab._resizeMode:
+    //   • normal mode:  tap opens panel, drag translates position
+    //   • resize mode (entered by double-tap): drag scales --fab-size
+    // Double-tap is detected as two taps (pointerup without movement) within
+    // DOUBLE_TAP_MS. Single tap falls through to the click listener that
+    // opens/closes the panel.
+    const DRAG_THRESHOLD = 6;
+    const RESIZE_THRESHOLD = 4;
+    const DOUBLE_TAP_MS = 350;
+
+    let pointerId = null;
+    let startX = 0, startY = 0, fabStartX = 0, fabStartY = 0;
+    let startDiag = 0, startSizePx = 0;
+    let moved = false;
+    let lastTapTs = 0;
+
+    function enterResizeMode() {
+      if (fab._resizeMode) return;
+      fab._resizeMode = true;
+      fab.classList.add('resize-mode');
+      document.addEventListener('click', outsideClick, true);
+      document.addEventListener('keydown', escKey);
+    }
+    function exitResizeMode() {
+      if (!fab._resizeMode) return;
+      fab._resizeMode = false;
+      fab.classList.remove('resize-mode');
+      document.removeEventListener('click', outsideClick, true);
+      document.removeEventListener('keydown', escKey);
+    }
+    function outsideClick(ev) {
+      if (!fab.contains(ev.target)) exitResizeMode();
+    }
+    function escKey(ev) {
+      if (ev.key === 'Escape') exitResizeMode();
+    }
 
     function onDown(ev) {
-      // don't hijack pointerdown on the running-state ctrl buttons / resize grip
-      if (ev.target && ev.target.closest && ev.target.closest('[data-act], .ft-fab-resize')) return;
-      if (pointerId !== null) return; // single active pointer
+      // never hijack pointerdowns on ctrl buttons / form controls
+      if (ev.target && ev.target.closest &&
+          ev.target.closest('[data-act], button, input, textarea, select')) return;
+      if (pointerId !== null) return;
       try { fab.setPointerCapture(ev.pointerId); } catch (e) {}
       pointerId = ev.pointerId;
-      const rect = fab.getBoundingClientRect();
-      startX = ev.clientX; startY = ev.clientY;
-      fabStartX = rect.left; fabStartY = rect.top;
       moved = false;
       fab._justDragged = false;
+
+      const rect = fab.getBoundingClientRect();
+      if (fab._resizeMode) {
+        // resize gesture reference
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top  + rect.height / 2;
+        startDiag = Math.hypot(ev.clientX - cx, ev.clientY - cy);
+        startSizePx = rect.width;
+      } else {
+        // position-drag reference
+        startX = ev.clientX; startY = ev.clientY;
+        fabStartX = rect.left; fabStartY = rect.top;
+      }
     }
+
     function onMove(ev) {
       if (pointerId == null || ev.pointerId !== pointerId) return;
-      const dx = ev.clientX - startX;
-      const dy = ev.clientY - startY;
-      if (!moved) {
-        if (Math.abs(dx) < THRESHOLD && Math.abs(dy) < THRESHOLD) return;
-        moved = true;
-        fab.classList.add('dragging');
+      if (fab._resizeMode) {
+        const rect = fab.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top  + rect.height / 2;
+        const diag = Math.hypot(ev.clientX - cx, ev.clientY - cy);
+        if (!moved) {
+          if (Math.abs(diag - startDiag) < RESIZE_THRESHOLD) return;
+          moved = true;
+          fab.classList.add('resizing');
+        }
+        if (ev.cancelable) ev.preventDefault();
+        // 2× so a near-edge pull corresponds to ~diameter change in size
+        applyFabSize(fab, startSizePx + (diag - startDiag) * 2);
+        // reclamp position in case new size pushes the FAB off-screen
+        if (fab.style.left && fab.style.top) {
+          const r = fab.getBoundingClientRect();
+          applyFabPos(fab, r.left, r.top);
+        }
+      } else {
+        const dx = ev.clientX - startX;
+        const dy = ev.clientY - startY;
+        if (!moved) {
+          if (Math.abs(dx) < DRAG_THRESHOLD && Math.abs(dy) < DRAG_THRESHOLD) return;
+          moved = true;
+          fab.classList.add('dragging');
+        }
+        if (ev.cancelable) ev.preventDefault();
+        applyFabPos(fab, fabStartX + dx, fabStartY + dy);
       }
-      if (ev.cancelable) ev.preventDefault();
-      applyFabPos(fab, fabStartX + dx, fabStartY + dy);
     }
+
     function onUpOrCancel(ev) {
       if (pointerId == null || ev.pointerId !== pointerId) return;
       try { fab.releasePointerCapture(pointerId); } catch (e) {}
@@ -4136,11 +4211,42 @@ const FocusTimer = (function () {
       const wasMoved = moved;
       moved = false;
       fab.classList.remove('dragging');
+      fab.classList.remove('resizing');
+
       if (wasMoved) {
-        saveFabPos(fab);
+        // persist either position or size depending on the active gesture
+        if (fab._resizeMode) {
+          const cur = getComputedStyle(fab).getPropertyValue('--fab-size').trim();
+          const n = parseInt(cur, 10);
+          if (!Number.isNaN(n)) {
+            try { localStorage.setItem(FAB_SIZE_KEY, String(n)); } catch (e) {}
+          }
+        } else {
+          saveFabPos(fab);
+        }
         fab._justDragged = true;
-        // cleared on next tick so the impending synthetic click is squelched,
-        // but a later real click still fires.
+        lastTapTs = 0;
+        setTimeout(() => { fab._justDragged = false; }, 0);
+        return;
+      }
+
+      // no movement → tap. Is this the second one of a double-tap?
+      const now = Date.now();
+      if (lastTapTs && (now - lastTapTs) < DOUBLE_TAP_MS) {
+        lastTapTs = 0;
+        // squelch the synthetic click that follows this pointerup so the
+        // double-tap doesn't ALSO open/close the panel.
+        fab._justDragged = true;
+        setTimeout(() => { fab._justDragged = false; }, 0);
+        if (fab._resizeMode) exitResizeMode();
+        else enterResizeMode();
+        return;
+      }
+      lastTapTs = now;
+      // single tap falls through → click listener opens panel (unless we're
+      // in resize mode, in which case the click listener should NOT open it)
+      if (fab._resizeMode) {
+        fab._justDragged = true;
         setTimeout(() => { fab._justDragged = false; }, 0);
       }
     }
@@ -4154,7 +4260,6 @@ const FocusTimer = (function () {
     // reclamp on viewport change (e.g. iPad rotation, address-bar chrome reflow)
     const reclamp = () => {
       const r = fab.getBoundingClientRect();
-      // if inline left/top is set, reclamp; otherwise leave defaults alone
       if (fab.style.left && fab.style.top) applyFabPos(fab, r.left, r.top);
     };
     window.addEventListener('resize', reclamp);
@@ -4184,65 +4289,6 @@ const FocusTimer = (function () {
     applyFabSize(fab, n);
   }
 
-  function installFabResize(fab) {
-    let pointerId = null;
-    let startPx = FAB_SIZE_DEFAULT;
-    let startDiag = 0; // diagonal distance from center at pointerdown
-
-    function onDown(ev) {
-      // only react when the handle itself was hit
-      if (!ev.target || !ev.target.closest || !ev.target.closest('.ft-fab-resize')) return;
-      if (pointerId !== null) return;
-      ev.stopPropagation(); // never let drag see this pointerdown
-      pointerId = ev.pointerId;
-      try { fab.setPointerCapture(pointerId); } catch (e) {}
-      const rect = fab.getBoundingClientRect();
-      startPx = rect.width; // fab is square
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top  + rect.height / 2;
-      startDiag = Math.hypot(ev.clientX - cx, ev.clientY - cy);
-      fab.classList.add('resizing');
-    }
-    function onMove(ev) {
-      if (pointerId == null || ev.pointerId !== pointerId) return;
-      if (ev.cancelable) ev.preventDefault();
-      const rect = fab.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top  + rect.height / 2;
-      const diag = Math.hypot(ev.clientX - cx, ev.clientY - cy);
-      // 2× so near-corner pulls translate to full-diameter changes
-      const next = startPx + (diag - startDiag) * 2;
-      applyFabSize(fab, next);
-      // reclamp position in case new size pushes the FAB off-screen
-      if (fab.style.left && fab.style.top && typeof applyFabPos === 'function') {
-        const r = fab.getBoundingClientRect();
-        applyFabPos(fab, r.left, r.top);
-      }
-    }
-    function onUpOrCancel(ev) {
-      if (pointerId == null || ev.pointerId !== pointerId) return;
-      try { fab.releasePointerCapture(pointerId); } catch (e) {}
-      pointerId = null;
-      fab.classList.remove('resizing');
-      // persist
-      const cur = getComputedStyle(fab).getPropertyValue('--fab-size').trim();
-      const n = parseInt(cur, 10);
-      if (!Number.isNaN(n)) {
-        try { localStorage.setItem(FAB_SIZE_KEY, String(n)); } catch (e) {}
-      }
-      // squelch next synthetic click so release doesn't open the panel
-      fab._justDragged = true;
-      setTimeout(() => { fab._justDragged = false; }, 0);
-    }
-
-    // capture phase so drag's pointerdown listener doesn't fire first
-    fab.addEventListener('pointerdown',  onDown, true);
-    fab.addEventListener('pointermove',  onMove);
-    fab.addEventListener('pointerup',    onUpOrCancel);
-    fab.addEventListener('pointercancel', onUpOrCancel);
-    fab.addEventListener('lostpointercapture', onUpOrCancel);
-  }
-
   function init(d, c) {
     data = d; cfg = c;
     load();
@@ -4251,8 +4297,7 @@ const FocusTimer = (function () {
     // restore persisted FAB position + size (clamped) before interaction binds
     restoreFabPos(fab);
     restoreFabSize(fab);
-    installFabDrag(fab);
-    installFabResize(fab);
+    installFabDrag(fab); // handles drag + double-tap → resize-mode + resize drag
     fab.addEventListener('click', (ev) => {
       // a drag just ended — squelch the synthetic click that follows pointerup
       if (fab._justDragged) { ev.stopPropagation(); ev.preventDefault(); return; }
