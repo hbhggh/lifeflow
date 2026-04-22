@@ -1,6 +1,6 @@
 {
   "schema_version": "0.2",
-  "updated_at": "2026-04-22T03:41:23.942Z",
+  "updated_at": "2026-04-22T04:05:36.534Z",
   "user": {
     "name": "吴昊",
     "level": 3,
@@ -77,7 +77,7 @@
         "time": "11:38",
         "task": "--6",
         "project_id": "ai_tools_flow",
-        "project_delta_pct": 3,
+        "project_delta_pct": 4,
         "points": 20,
         "source": "focus_insight"
       }
@@ -284,8 +284,8 @@
     {
       "id": "ai_tools_flow",
       "name": "AI 工具 flow",
-      "pct": 11,
-      "today_delta_pct": 7,
+      "pct": 12,
+      "today_delta_pct": 8,
       "color": "#7F77DD",
       "category": "learning",
       "sub": [
