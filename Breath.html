@@ -4148,8 +4148,12 @@ const FocusTimer = (function () {
     }
 
     function onDown(ev) {
+      // Only skip pointerdowns on FAB's own ctrl buttons (⏸/⏹ carry data-act).
+      // Earlier versions filtered by `button` as well, but .ft-fab IS a <button>,
+      // so closest('button') matched the FAB itself and short-circuited every
+      // single gesture. Keep the filter narrow: [data-act] + form controls.
       if (ev.target && ev.target.closest &&
-          ev.target.closest('[data-act], button, input, textarea, select')) return;
+          ev.target.closest('[data-act], input, textarea, select')) return;
       if (pointerId !== null) return;
       // iOS: prevent this pointerdown from being interpreted as a text-selection
       // anchor — without this, a long press starts the system magnifier / callout
@@ -4244,8 +4248,9 @@ const FocusTimer = (function () {
     // into text selection. (touchstart preventDefault is avoided because it
     // would also suppress the synthetic click, breaking "single tap opens panel".)
     fab.addEventListener('selectstart', (ev) => {
+      // same filter fix — don't let closest('button') match the FAB host.
       if (ev.target && ev.target.closest &&
-          ev.target.closest('[data-act], button, input, textarea, select')) return;
+          ev.target.closest('[data-act], input, textarea, select')) return;
       ev.preventDefault();
     });
 
