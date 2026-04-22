@@ -484,10 +484,40 @@
     letter-spacing: -0.01em;
   }
   .section-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
     font-family: var(--mono);
     font-size: 11px;
     color: var(--text-3);
     letter-spacing: 0.02em;
+  }
+  /* Tiny "+" add-entry button that lives next to section-meta; replaces the
+     full-width dashed button that used to sit on top of the list. Default
+     state is almost invisible — it earns attention on hover without
+     crowding the header. */
+  .section-meta .meta-add-btn {
+    all: unset;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    font-size: 16px;
+    line-height: 1;
+    color: var(--text-4);
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background 160ms ease, color 160ms ease, transform 120ms ease;
+  }
+  .section-meta .meta-add-btn:hover {
+    color: var(--pos-fg);
+    background: var(--pos-bg);
+  }
+  .section-meta .meta-add-btn:active { transform: scale(0.92); }
+  .section-meta .meta-add-btn:focus-visible {
+    outline: 2px solid var(--pos);
+    outline-offset: 1px;
   }
 
   .belowhero {
@@ -1868,28 +1898,7 @@
     border-radius: 3px;
   }
 
-  /* ——— manual entry add (in-line at top of #entries-list) ——— */
-  .entry-add-btn {
-    display: block;
-    width: 100%;
-    font-family: var(--mono);
-    font-size: 12px;
-    letter-spacing: 0.01em;
-    color: var(--text-3);
-    text-align: center;
-    padding: 9px 12px;
-    background: transparent;
-    border: 1px dashed var(--line);
-    border-radius: 6px;
-    cursor: pointer;
-    margin-bottom: 10px;
-    transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
-  }
-  .entry-add-btn:hover {
-    color: var(--text);
-    border-color: var(--text-3);
-    background: var(--track-ghost);
-  }
+  /* ——— manual entry add (form appears at top of #entries-list when open) ——— */
   .entry-add-form {
     display: flex;
     flex-direction: column;
@@ -2279,7 +2288,12 @@ function render(data) {
       <section class="section ${entriesCollapsed ? 'collapsed' : ''}" id="entries-section">
         <header class="section-head entries-head" data-act="toggle-entries" role="button" tabindex="0" aria-expanded="${entriesCollapsed ? 'false' : 'true'}">
           <div class="section-title"><span class="chev-sec" aria-hidden="true">▾</span>今日明细</div>
-          <div class="section-meta">${today.entries.length} 条 · ${today.points} 分</div>
+          <div class="section-meta">
+            <span>${today.entries.length} 条 · ${today.points} 分</span>
+            <button type="button" class="meta-add-btn"
+                    data-act="entry-add-open"
+                    aria-label="补录一条" title="补录一条">+</button>
+          </div>
         </header>
         <div class="entries" id="entries-list">
           ${renderEntryAddArea(projects)}
@@ -2583,9 +2597,20 @@ function bindEntriesToggle() {
     head.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
     try { localStorage.setItem('lifeflow_entries_collapsed', collapsed ? '1' : '0'); } catch(e) {}
   };
-  head.addEventListener('click', toggle);
+  head.addEventListener('click', (ev) => {
+    // header hosts sibling buttons (e.g. the meta "+" add-entry button) that
+    // carry their own data-act. Don't collapse the section when one of those
+    // is clicked — only the plain header area toggles.
+    const inner = ev.target.closest && ev.target.closest('[data-act]');
+    if (inner && inner !== head && inner.dataset.act !== 'toggle-entries') return;
+    toggle();
+  });
   head.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+    if (e.key === 'Enter' || e.key === ' ') {
+      if (e.target && e.target.closest && e.target.closest('[data-act]') !== head) return;
+      e.preventDefault();
+      toggle();
+    }
   });
 }
 
@@ -2622,9 +2647,9 @@ function defaultNowHHMM() {
 
 function renderEntryAddArea(projects) {
   const ui = window.__ADD_ENTRY__ || { open: false };
-  if (!ui.open) {
-    return `<button type="button" class="entry-add-btn" data-act="entry-add-open">+ 补录一条</button>`;
-  }
+  // collapsed: nothing rendered in-list. The "+" add affordance lives in the
+  // section header's meta row (see renderEntries section-head template).
+  if (!ui.open) return '';
   const d = ui.draft || { task: '', time: defaultNowHHMM(), points: 30, pct: 0, projectId: '' };
   const projOpts = ['<option value="">— 无项目 —</option>']
     .concat((projects || []).filter(p => p && p.visible !== false).map(p =>
@@ -2654,12 +2679,14 @@ function renderEntryAddArea(projects) {
 }
 
 function bindEntryAdd() {
-  const list = document.getElementById('entries-list');
-  if (!list || list.__entryAddBound) return;
-  list.__entryAddBound = true;
+  // Delegated on the whole #entries-section so both the header "+" button
+  // and the in-list form share one listener; data-act filters keep it tidy.
+  const section = document.getElementById('entries-section');
+  if (!section || section.__entryAddBound) return;
+  section.__entryAddBound = true;
 
   function snapshotDraft() {
-    const form = list.querySelector('.entry-add-form');
+    const form = section.querySelector('.entry-add-form');
     if (!form) return null;
     return {
       task:      (form.querySelector('.f-task').value || '').trim(),
@@ -2675,7 +2702,7 @@ function bindEntryAdd() {
     if (!data) return;
     const d = snapshotDraft();
     if (!d || !d.task) {
-      const ta = list.querySelector('.f-task');
+      const ta = section.querySelector('.f-task');
       if (ta) ta.focus();
       return;
     }
@@ -2714,14 +2741,16 @@ function bindEntryAdd() {
     render(data);
   }
 
-  list.addEventListener('click', (ev) => {
+  section.addEventListener('click', (ev) => {
     const btn = ev.target.closest('[data-act]');
     if (!btn) return;
     const act = btn.dataset.act;
     if (act === 'entry-add-open') {
+      // don't let this click bubble to the <header data-act="toggle-entries">
+      // which would collapse the section instead of opening the form
+      ev.stopPropagation();
       window.__ADD_ENTRY__ = { open: true, draft: { task: '', time: defaultNowHHMM(), points: 30, pct: 0, projectId: '' } };
       render(window.__DATA__);
-      // focus task field after the re-render
       setTimeout(() => {
         const ta = document.querySelector('.entry-add-form .f-task');
         if (ta) ta.focus();
@@ -2729,17 +2758,19 @@ function bindEntryAdd() {
       return;
     }
     if (act === 'entry-add-cancel') {
+      ev.stopPropagation();
       window.__ADD_ENTRY__ = { open: false };
       render(window.__DATA__);
       return;
     }
     if (act === 'entry-add-save') {
+      ev.stopPropagation();
       saveNew();
       return;
     }
   });
 
-  list.addEventListener('keydown', (ev) => {
+  section.addEventListener('keydown', (ev) => {
     if (!window.__ADD_ENTRY__ || !window.__ADD_ENTRY__.open) return;
     const form = ev.target.closest('.entry-add-form');
     if (!form) return;
@@ -2757,7 +2788,7 @@ function bindEntryAdd() {
 
   // Persist in-progress typing so re-render (triggered by SyncClient events)
   // doesn't wipe the user's draft.
-  list.addEventListener('input', (ev) => {
+  section.addEventListener('input', (ev) => {
     if (!window.__ADD_ENTRY__ || !window.__ADD_ENTRY__.open) return;
     if (!ev.target.closest('.entry-add-form')) return;
     const d = snapshotDraft();
