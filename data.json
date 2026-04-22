@@ -1,6 +1,6 @@
 {
   "schema_version": "0.2",
-  "updated_at": "2026-04-22T02:38:24.685Z",
+  "updated_at": "2026-04-22T02:38:55.067Z",
   "user": {
     "name": "吴昊",
     "level": 3,
@@ -12,7 +12,7 @@
   },
   "today": {
     "date": "2026-04-22",
-    "points": 0,
+    "points": 15,
     "rank_pct": 92,
     "focus_sessions": [
       {
@@ -29,9 +29,44 @@
         "entry_id_linked": null,
         "note": "",
         "insights": []
+      },
+      {
+        "id": "s_202604220238",
+        "mode": "countdown",
+        "planned_sec": 2700,
+        "actual_sec": 15,
+        "start_at": "2026-04-22T02:38:29.676Z",
+        "end_at": "2026-04-22T02:38:44.544Z",
+        "pre_clarity": 57,
+        "post_clarity": 70,
+        "project_id": "ai_tools_flow",
+        "entry_ids": [
+          "e_202604220238_i1"
+        ],
+        "entry_id_linked": "e_202604220238_i1",
+        "note": "兔兔",
+        "insights": [
+          {
+            "id": "i_mo9g19mn",
+            "text": "--6",
+            "points": 15,
+            "project_id": "ai_tools_flow",
+            "at": "2026-04-22T02:38:34.751Z"
+          }
+        ]
       }
     ],
-    "entries": []
+    "entries": [
+      {
+        "id": "e_202604220238_i1",
+        "time": "11:38",
+        "task": "--6",
+        "project_id": "ai_tools_flow",
+        "project_delta_pct": 0,
+        "points": 15,
+        "source": "focus_insight"
+      }
+    ]
   },
   "yesterday": {
     "date": "2026-04-21",
