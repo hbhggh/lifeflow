@@ -50,7 +50,13 @@ export async function onRequestPost({ request, env }) {
 
     const incomingSessions = Array.isArray(payload.sessions) ? payload.sessions : [];
     const incomingEntries  = Array.isArray(payload.entries)  ? payload.entries  : [];
-    if (incomingSessions.length === 0 && incomingEntries.length === 0) {
+    // Client tells us what *today* is from the device's perspective (JST/CST/whatever
+    // the user is in). We never trust server-side Date() for the day boundary —
+    // CF edges can be anywhere. Validate shape YYYY-MM-DD before use.
+    const clientTodayRaw = typeof payload.today_date === 'string' ? payload.today_date.trim() : '';
+    const clientToday = /^\d{4}-\d{2}-\d{2}$/.test(clientTodayRaw) ? clientTodayRaw : '';
+    if (incomingSessions.length === 0 && incomingEntries.length === 0 && !clientToday) {
+      // pure no-op push (nothing to write, no date hint either) — succeed silently
       return json({ ok: true, accepted: { sessions: 0, entries: 0 }, noop: true });
     }
 
@@ -87,6 +93,30 @@ export async function onRequestPost({ request, env }) {
       data.today.focus_sessions = Array.isArray(data.today.focus_sessions) ? data.today.focus_sessions : [];
       data.today.entries        = Array.isArray(data.today.entries)        ? data.today.entries        : [];
 
+      // Day rollover: if the device tells us today ≠ data.today.date, archive
+      // the old today as yesterday + push its points into history, then start
+      // a fresh today. Idempotent — no-op when dates already match. Done
+      // BEFORE upsert so the incoming session/entries land on the new day.
+      let rolled = false;
+      if (clientToday && data.today.date && data.today.date !== clientToday) {
+        const oldToday = data.today;
+        data.yesterday = { date: oldToday.date, points: Number(oldToday.points) || 0 };
+        data.history_points = Array.isArray(data.history_points) ? data.history_points : [];
+        data.history_points.push(Number(oldToday.points) || 0);
+        if (data.history_points.length > 200) data.history_points = data.history_points.slice(-200);
+        data.today = {
+          date: clientToday,
+          points: 0,
+          rank_pct: oldToday.rank_pct || 0,
+          focus_sessions: [],
+          entries: []
+        };
+        rolled = true;
+      } else if (clientToday && !data.today.date) {
+        // first-ever write into a data.json with no today.date; stamp it
+        data.today.date = clientToday;
+      }
+
       // Upsert by id (sessions: id only; entries: id OR legacy (time, task) natural key).
       // "id already present → merge fields in place (incoming wins)" lets the browser
       // edit already-committed rows (e.g. user re-scoring an entry's points). "id absent
@@ -122,7 +152,7 @@ export async function onRequestPost({ request, env }) {
       }
 
       const touched = upsertedSessions + addedSessions + upsertedEntries + addedEntries;
-      if (touched === 0) {
+      if (touched === 0 && !rolled) {
         return json({ ok: true, accepted: { sessions: 0, entries: 0 }, noop: true, sha });
       }
 
@@ -132,7 +162,9 @@ export async function onRequestPost({ request, env }) {
 
       const newContent = JSON.stringify(data, null, 2) + '\n';
       const newContentB64 = b64EncodeUtf8(newContent);
-      const commitMessage = `data: sync ${addedSessions}+${upsertedSessions}s · ${addedEntries}+${upsertedEntries}e from web (auto)`;
+      const commitMessage = rolled
+        ? `data: rollover to ${clientToday} + sync ${addedSessions}+${upsertedSessions}s · ${addedEntries}+${upsertedEntries}e from web (auto)`
+        : `data: sync ${addedSessions}+${upsertedSessions}s · ${addedEntries}+${upsertedEntries}e from web (auto)`;
 
       const putRes = await fetch(putUrl, {
         method: 'PUT',
@@ -157,6 +189,8 @@ export async function onRequestPost({ request, env }) {
       const putData = await putRes.json();
       return json({
         ok: true,
+        rolled,
+        today: data.today && data.today.date || null,
         accepted: {
           sessions_added: addedSessions,
           sessions_upserted: upsertedSessions,

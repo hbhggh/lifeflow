@@ -1924,6 +1924,11 @@
   }
 
   window.__CFG__ = cfg;
+  // Rotate day boundary if data.today.date is not today (Claude hasn't rotated
+  // data.json for today yet). Do this BEFORE merging the outbox, so new
+  // sessions/entries land in a fresh today rather than piling on yesterday's
+  // points.
+  ensureTodayFresh(data);
   // merge any un-synced outbox items so the UI reflects what the user already recorded,
   // even before /api/session has had a chance to push them through.
   SyncClient.mergeIntoData(data);
@@ -1932,6 +1937,44 @@
   FocusTimer.init(data, cfg);
   SyncClient.init();
 })();
+
+// Return today's date as YYYY-MM-DD in the device's local timezone.
+function localTodayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+
+// Make sure data.today corresponds to *today* (device local). If not, rotate:
+//   data.yesterday  ← old today's date + points
+//   data.history_points ← push old today's points
+//   data.today      ← fresh {date: localToday, points: 0, entries: [], focus_sessions: []}
+// Idempotent: once data.today.date === localToday it is a no-op.
+// Called (a) at page load before outbox merge, (b) at the top of commitSession,
+// so a user keeping the tab open across midnight still sees new sessions land
+// in a new day's bucket.
+function ensureTodayFresh(data) {
+  if (!data) return;
+  data.today = data.today || {};
+  const localToday = localTodayStr();
+  if (data.today.date === localToday) return;
+  const oldToday = data.today;
+  if (oldToday.date) {
+    // archive as yesterday + append points to history
+    data.yesterday = { date: oldToday.date, points: Number(oldToday.points) || 0 };
+    data.history_points = Array.isArray(data.history_points) ? data.history_points : [];
+    data.history_points.push(Number(oldToday.points) || 0);
+    if (data.history_points.length > 200) data.history_points = data.history_points.slice(-200);
+  }
+  data.today = {
+    date: localToday,
+    points: 0,
+    rank_pct: oldToday.rank_pct || 0,
+    focus_sessions: [],
+    entries: []
+  };
+}
 
 function fmtUpdated(iso) {
   try {
@@ -2583,10 +2626,17 @@ const SyncClient = (function () {
     }
     pushing = true; renderChip();
     try {
+      // Tell Function what *today* is from the device's point of view so it can
+      // rotate data.today if the remote file is still on yesterday's date.
+      const todayDate = (typeof localTodayStr === 'function') ? localTodayStr() : null;
       const resp = await fetch(ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessions: o.sessions, entries: o.entries }),
+        body: JSON.stringify({
+          sessions: o.sessions,
+          entries: o.entries,
+          today_date: todayDate
+        }),
         credentials: 'include' // carry CF Access cookie
       });
       if (!resp.ok) {
@@ -3720,6 +3770,9 @@ const FocusTimer = (function () {
   }
 
   function commitSession(s) {
+    // roll the day if the tab was open past midnight (or the remote data.json
+    // was stale). After this, data.today is guaranteed to be today.
+    ensureTodayFresh(data);
     data.today = data.today || {};
     data.today.focus_sessions = data.today.focus_sessions || [];
     data.today.entries = data.today.entries || [];
