@@ -1,6 +1,6 @@
 {
   "schema_version": "0.2",
-  "updated_at": "2026-04-22T03:10:25.654Z",
+  "updated_at": "2026-04-22T03:13:23.976Z",
   "user": {
     "name": "吴昊",
     "level": 3,
@@ -54,6 +54,21 @@
             "at": "2026-04-22T02:38:34.751Z"
           }
         ]
+      },
+      {
+        "id": "s_202604220304",
+        "mode": "countdown",
+        "planned_sec": 2700,
+        "actual_sec": 506,
+        "start_at": "2026-04-22T03:04:56.677Z",
+        "end_at": "2026-04-22T03:13:22.324Z",
+        "pre_clarity": 70,
+        "post_clarity": 70,
+        "project_id": null,
+        "entry_ids": [],
+        "entry_id_linked": null,
+        "note": "",
+        "insights": []
       }
     ],
     "entries": [
