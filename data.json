@@ -1,6 +1,6 @@
 {
   "schema_version": "0.2",
-  "updated_at": "2026-04-22T03:13:23.976Z",
+  "updated_at": "2026-04-22T03:41:23.942Z",
   "user": {
     "name": "吴昊",
     "level": 3,
@@ -12,7 +12,7 @@
   },
   "today": {
     "date": "2026-04-22",
-    "points": 15,
+    "points": 20,
     "rank_pct": 92,
     "focus_sessions": [
       {
@@ -78,7 +78,7 @@
         "task": "--6",
         "project_id": "ai_tools_flow",
         "project_delta_pct": 3,
-        "points": 15,
+        "points": 20,
         "source": "focus_insight"
       }
     ]
