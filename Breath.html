@@ -704,9 +704,17 @@
     position: fixed;     /* preserved from idle */
     overflow: visible;
   }
+  /* While a long-press resize gesture is active: ring + scale bump reassure
+     the user their touch is being heard. No persistent "mode" — the whole
+     thing only exists for the duration of the press. */
   .ft-fab.resizing {
     transition: none !important;
     cursor: nwse-resize;
+    transform: scale(1.02);
+    box-shadow:
+      0 16px 40px rgba(0,0,0,0.24),
+      0 0 0 2px var(--bg),
+      0 0 0 4px var(--text);
   }
   .ft-fab.running:hover { transform: translateY(-1px); }
   .ft-fab .ft-fab-pill { display: inline-flex; align-items: center; gap: 8px; }
@@ -800,39 +808,6 @@
     padding: 3px 5px;
     border-radius: 4px;
     transition: color .15s ease, background .15s ease;
-  }
-  /* Double-tap the running FAB → it enters a "selected" resize mode.
-     Ring of breath around the circle + cursor swap. Drag the body to scale.
-     Double-tap again / Esc / tap outside → exit. */
-  .ft-fab.resize-mode {
-    cursor: nwse-resize;
-    box-shadow:
-      0 12px 32px rgba(0,0,0,0.18),
-      0 0 0 2px var(--bg),
-      0 0 0 4px var(--text-2);
-    animation: fab-resize-mode-pulse 1.8s ease-in-out infinite;
-  }
-  @keyframes fab-resize-mode-pulse {
-    0%, 100% {
-      box-shadow:
-        0 12px 32px rgba(0,0,0,0.18),
-        0 0 0 2px var(--bg),
-        0 0 0 4px var(--text-2);
-    }
-    50% {
-      box-shadow:
-        0 14px 36px rgba(0,0,0,0.22),
-        0 0 0 2px var(--bg),
-        0 0 0 6px var(--text);
-    }
-  }
-  /* while actually dragging to resize, freeze the pulse + strongest ring */
-  .ft-fab.resize-mode.resizing {
-    animation: none;
-    box-shadow:
-      0 14px 36px rgba(0,0,0,0.22),
-      0 0 0 2px var(--bg),
-      0 0 0 4px var(--text);
   }
   .ft-fab.running .ft-fab-ctrl button:hover {
     color: var(--text);
@@ -1965,7 +1940,9 @@
 </div>
 
 <!-- Floating Focus Timer -->
-<button class="ft-fab" id="ft-fab" type="button" aria-label="专注计时器">
+<button class="ft-fab" id="ft-fab" type="button"
+        aria-label="专注计时器"
+        title="点击打开面板 · 拖动搬位置 · 长按缩放大小">
   <span class="ft-fab-pill">
     <span class="dot"></span>
     <span id="ft-fab-label">专注计时</span>
@@ -4110,145 +4087,133 @@ const FocusTimer = (function () {
   }
 
   function installFabDrag(fab) {
-    // One pointer handler runs two separate gestures depending on fab._resizeMode:
-    //   • normal mode:  tap opens panel, drag translates position
-    //   • resize mode (entered by double-tap): drag scales --fab-size
-    // Double-tap is detected as two taps (pointerup without movement) within
-    // DOUBLE_TAP_MS. Single tap falls through to the click listener that
-    // opens/closes the panel.
+    // One pointer handler runs three mutually-exclusive gestures per press:
+    //   • tap (no move, released before LONG_PRESS_MS) → panel open/close
+    //   • drag (moved ≥ DRAG_THRESHOLD px before LONG_PRESS_MS) → position
+    //   • long-press resize (held ≥ LONG_PRESS_MS without moving) → the current
+    //     pointer continues into a size-drag (circular: distance from center
+    //     maps to --fab-size). Released = save + exit. No persistent mode.
+    //
+    // Double-tap is gone — it was stolen by the first click opening the panel
+    // before the second tap could land on the FAB. Long-press avoids that
+    // entirely because single tap still opens panel instantly.
     const DRAG_THRESHOLD = 6;
-    const RESIZE_THRESHOLD = 4;
-    const DOUBLE_TAP_MS = 350;
+    const RESIZE_THRESHOLD = 3;
+    const LONG_PRESS_MS = 500;
 
     let pointerId = null;
     let startX = 0, startY = 0, fabStartX = 0, fabStartY = 0;
     let startDiag = 0, startSizePx = 0;
-    let moved = false;
-    let lastTapTs = 0;
+    let moved = false;      // position-drag threshold crossed
+    let resizeActive = false;
+    let longPressTimer = null;
+    let lastClientX = 0, lastClientY = 0;
 
-    function enterResizeMode() {
-      if (fab._resizeMode) return;
-      fab._resizeMode = true;
-      fab.classList.add('resize-mode');
-      document.addEventListener('click', outsideClick, true);
-      document.addEventListener('keydown', escKey);
+    function clearLongPress() {
+      if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
     }
-    function exitResizeMode() {
-      if (!fab._resizeMode) return;
-      fab._resizeMode = false;
-      fab.classList.remove('resize-mode');
-      document.removeEventListener('click', outsideClick, true);
-      document.removeEventListener('keydown', escKey);
-    }
-    function outsideClick(ev) {
-      if (!fab.contains(ev.target)) exitResizeMode();
-    }
-    function escKey(ev) {
-      if (ev.key === 'Escape') exitResizeMode();
+
+    function armLongPress(ev) {
+      const rect = fab.getBoundingClientRect();
+      longPressTimer = setTimeout(() => {
+        longPressTimer = null;
+        // don't promote to resize if the finger already started a drag,
+        // or if the gesture was canceled before the timer fired.
+        if (pointerId == null || moved) return;
+        // switch this ongoing gesture into a resize
+        resizeActive = true;
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top  + rect.height / 2;
+        startDiag = Math.hypot(lastClientX - cx, lastClientY - cy);
+        startSizePx = fab.getBoundingClientRect().width;
+        fab.classList.add('resizing');
+        // tiny haptic on supported devices (Android Chrome; iOS Safari is no-op)
+        if (navigator.vibrate) try { navigator.vibrate(12); } catch (e) {}
+      }, LONG_PRESS_MS);
     }
 
     function onDown(ev) {
-      // never hijack pointerdowns on ctrl buttons / form controls
       if (ev.target && ev.target.closest &&
           ev.target.closest('[data-act], button, input, textarea, select')) return;
       if (pointerId !== null) return;
       try { fab.setPointerCapture(ev.pointerId); } catch (e) {}
       pointerId = ev.pointerId;
       moved = false;
+      resizeActive = false;
       fab._justDragged = false;
 
       const rect = fab.getBoundingClientRect();
-      if (fab._resizeMode) {
-        // resize gesture reference
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top  + rect.height / 2;
-        startDiag = Math.hypot(ev.clientX - cx, ev.clientY - cy);
-        startSizePx = rect.width;
-      } else {
-        // position-drag reference
-        startX = ev.clientX; startY = ev.clientY;
-        fabStartX = rect.left; fabStartY = rect.top;
-      }
+      startX = ev.clientX; startY = ev.clientY;
+      fabStartX = rect.left; fabStartY = rect.top;
+      lastClientX = ev.clientX; lastClientY = ev.clientY;
+
+      armLongPress(ev);
     }
 
     function onMove(ev) {
       if (pointerId == null || ev.pointerId !== pointerId) return;
-      if (fab._resizeMode) {
+      lastClientX = ev.clientX;
+      lastClientY = ev.clientY;
+
+      if (resizeActive) {
+        // size gesture: distance from center → new diameter
         const rect = fab.getBoundingClientRect();
         const cx = rect.left + rect.width / 2;
         const cy = rect.top  + rect.height / 2;
         const diag = Math.hypot(ev.clientX - cx, ev.clientY - cy);
-        if (!moved) {
-          if (Math.abs(diag - startDiag) < RESIZE_THRESHOLD) return;
-          moved = true;
-          fab.classList.add('resizing');
-        }
+        if (Math.abs(diag - startDiag) < RESIZE_THRESHOLD) return;
         if (ev.cancelable) ev.preventDefault();
-        // 2× so a near-edge pull corresponds to ~diameter change in size
         applyFabSize(fab, startSizePx + (diag - startDiag) * 2);
-        // reclamp position in case new size pushes the FAB off-screen
         if (fab.style.left && fab.style.top) {
           const r = fab.getBoundingClientRect();
           applyFabPos(fab, r.left, r.top);
         }
-      } else {
-        const dx = ev.clientX - startX;
-        const dy = ev.clientY - startY;
-        if (!moved) {
-          if (Math.abs(dx) < DRAG_THRESHOLD && Math.abs(dy) < DRAG_THRESHOLD) return;
-          moved = true;
-          fab.classList.add('dragging');
-        }
-        if (ev.cancelable) ev.preventDefault();
-        applyFabPos(fab, fabStartX + dx, fabStartY + dy);
+        return;
       }
+
+      // position drag candidate
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      if (!moved) {
+        if (Math.abs(dx) < DRAG_THRESHOLD && Math.abs(dy) < DRAG_THRESHOLD) return;
+        moved = true;
+        clearLongPress(); // moved → no longer a long-press candidate
+        fab.classList.add('dragging');
+      }
+      if (ev.cancelable) ev.preventDefault();
+      applyFabPos(fab, fabStartX + dx, fabStartY + dy);
     }
 
     function onUpOrCancel(ev) {
       if (pointerId == null || ev.pointerId !== pointerId) return;
+      clearLongPress();
       try { fab.releasePointerCapture(pointerId); } catch (e) {}
       pointerId = null;
       const wasMoved = moved;
+      const wasResize = resizeActive;
       moved = false;
+      resizeActive = false;
       fab.classList.remove('dragging');
       fab.classList.remove('resizing');
 
-      if (wasMoved) {
-        // persist either position or size depending on the active gesture
-        if (fab._resizeMode) {
-          const cur = getComputedStyle(fab).getPropertyValue('--fab-size').trim();
-          const n = parseInt(cur, 10);
-          if (!Number.isNaN(n)) {
-            try { localStorage.setItem(FAB_SIZE_KEY, String(n)); } catch (e) {}
-          }
-        } else {
-          saveFabPos(fab);
+      if (wasResize) {
+        // persist size
+        const cur = getComputedStyle(fab).getPropertyValue('--fab-size').trim();
+        const n = parseInt(cur, 10);
+        if (!Number.isNaN(n)) {
+          try { localStorage.setItem(FAB_SIZE_KEY, String(n)); } catch (e) {}
         }
         fab._justDragged = true;
-        lastTapTs = 0;
         setTimeout(() => { fab._justDragged = false; }, 0);
         return;
       }
-
-      // no movement → tap. Is this the second one of a double-tap?
-      const now = Date.now();
-      if (lastTapTs && (now - lastTapTs) < DOUBLE_TAP_MS) {
-        lastTapTs = 0;
-        // squelch the synthetic click that follows this pointerup so the
-        // double-tap doesn't ALSO open/close the panel.
+      if (wasMoved) {
+        saveFabPos(fab);
         fab._justDragged = true;
         setTimeout(() => { fab._justDragged = false; }, 0);
-        if (fab._resizeMode) exitResizeMode();
-        else enterResizeMode();
         return;
       }
-      lastTapTs = now;
-      // single tap falls through → click listener opens panel (unless we're
-      // in resize mode, in which case the click listener should NOT open it)
-      if (fab._resizeMode) {
-        fab._justDragged = true;
-        setTimeout(() => { fab._justDragged = false; }, 0);
-      }
+      // plain tap: fall through to the click listener (opens panel)
     }
 
     fab.addEventListener('pointerdown',  onDown);
