@@ -2319,8 +2319,8 @@ function render(data) {
                     title="${addEntryOpen ? '点一下收起' : '补录一条'}">+</button>
           </div>
         </header>
-        <!-- The add-form lives OUTSIDE #entries-list so it's still visible when
-             the list is collapsed. Empty when closed, hence `:not(:empty)` in CSS. -->
+        <!-- add-form lives OUTSIDE #entries-list so it's still visible when
+             the list is collapsed. CSS hides the empty container anyway. -->
         <div class="entry-add-area">${renderEntryAddArea(projects)}</div>
         <div class="entries" id="entries-list">
           ${today.entries.map((e, i) => ({ e, i })).reverse().map(({ e, i }) => renderEntry(e, projects, i)).join('')}
