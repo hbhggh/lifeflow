@@ -1,6 +1,6 @@
 {
   "schema_version": "0.2",
-  "updated_at": "2026-04-22T11:08:30.000Z",
+  "updated_at": "2026-04-22T11:10:00.000Z",
   "user": {
     "name": "吴昊",
     "level": 3,
@@ -65,7 +65,7 @@
       {
         "id": "e_20260422_0935",
         "time": "09:35",
-        "task": "🌌 日語学习 1h58min",
+        "task": "🌌 日语学习 1h58min",
         "project_id": "japanese",
         "project_delta_pct": 0,
         "points": 50,
@@ -83,7 +83,7 @@
       {
         "id": "e_20260422_1949",
         "time": "19:49",
-        "task": "🚗 去拿停车证明 1h",
+        "task": "🚗 去拿停车证明",
         "project_id": null,
         "project_delta_pct": 0,
         "points": 50,
