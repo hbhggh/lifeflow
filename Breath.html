@@ -2203,8 +2203,11 @@ function updateFocusBar() {
       d.getFullYear() + '-' +
       String(d.getMonth()+1).padStart(2,'0') + '-' +
       String(d.getDate()).padStart(2,'0');
-    // require session's local date to match both today's real date AND data.today.date
-    return s === localToday && (!todayDateStr || s === todayDateStr);
+    // Use the device's real local date as the only truth. `data.today.date` lags
+    // whenever Claude hasn't rotated it yet (e.g. the first session of a new
+    // day). Previously we required both to match, which hid today's sessions
+    // until Claude rewrote data.json.
+    return s === localToday;
   };
   // remove old segs
   track.querySelectorAll('.seg').forEach(n => n.remove());
@@ -3516,69 +3519,175 @@ const FocusTimer = (function () {
   function openFinishModal(snap) {
     const modal = document.getElementById('ft-modal');
     const projects = (data && data.projects) || [];
-    const projOptions = ['<option value="">— 不挂项目 —</option>']
-      .concat(projects.map(p => `<option value="${p.id}" ${p.id===snap.projectId?'selected':''}>${escapeHtml(p.name)}</option>`))
-      .join('');
     const mins = Math.round(snap.actualSec / 60);
-    const insights = snap.insights || [];
-    const totalPts = insights.reduce((s,i)=>s+i.points, 0);
-    const insightsHtml = insights.length > 0
-      ? `<div class="ft-field">
-           <div class="label"><span>本次心得</span><span class="val">${insights.length} 条 · 共 +${totalPts}</span></div>
-           <div class="ft-insights" style="margin-top:6px">
-             <div class="items">${insights.map(it => {
-               const proj = projects.find(p => p.id === it.projectId);
-               const pName = proj ? proj.name : '无项目';
-               return `<div class="item">
-                 <span class="txt">${escapeHtml(it.text)}</span>
-                 <span class="proj">${escapeHtml(pName)}</span>
-                 <span class="pts">+${it.points}</span>
-               </div>`;
-             }).join('')}</div>
-           </div>
-         </div>`
-      : '';
 
-    modal.innerHTML = `
-      <div class="ft-modal-card">
-        <div class="ft-modal-head">专注结束 · 填写完成</div>
-        <div class="ft-modal-body">
-          <div class="ft-session-summary">
-            <div><span style="color:var(--text-4)">时段</span> <b>${toTime(snap.startedAt)} – ${toTime(snap.endedAt)}</b></div>
-            <div><span style="color:var(--text-4)">时长</span> <b>${fmtHMS(snap.actualSec)}</b> (${mins} 分钟)</div>
-            <div><span style="color:var(--text-4)">开始时清晰度</span> <b>${snap.preClarity}</b></div>
-            ${snap.note ? `<div><span style="color:var(--text-4)">名称</span> <b>${escapeHtml(snap.note)}</b></div>` : ''}
-          </div>
-          <div class="ft-field">
-            <div class="label"><span>结束时 · 大脑清晰度</span><span class="val" id="ft-post-val">70</span></div>
-            <input type="range" class="ft-slider" id="ft-post" min="0" max="100" step="1" value="70" />
-          </div>
-          <div class="ft-field">
-            <div class="label"><span>挂到哪个项目</span></div>
-            <select id="ft-m-project">${projOptions}</select>
-          </div>
-          ${insightsHtml}
-          <div class="ft-field">
-            <label style="display:flex;gap:8px;align-items:center;font-family:var(--mono);font-size:11.5px;color:var(--text-2);cursor:pointer">
-              <input type="checkbox" id="ft-m-entry" checked />
-              <span>生成今日明细 entry（心得会作为独立 entry 写入）</span>
-            </label>
-          </div>
-          <div class="ft-actions">
-            <button class="ft-btn" data-mact="discard">丢弃</button>
-            <button class="ft-btn primary" data-mact="save">保存</button>
+    // Working copy of insights — runtime panel already recorded some; the user
+    // can now add more here (the "recover from A4 paper" flow). The final
+    // list is what we pass to commitSession on save.
+    const insights = (snap.insights || []).slice();
+    // Modal-local UI state (not in snap, not in localStorage — only lives while modal is open)
+    const uiState = {
+      addingMore: false,
+      draft: { text: '', points: 30, projectId: snap.projectId || '' },
+      // postClarity / projectId / genEntry default values, updated by inputs
+      postClarity: 70,
+      projectId: snap.projectId || '',
+      genEntry: true
+    };
+
+    function projOptionsHtml(selectedId) {
+      return ['<option value="">— 不挂项目 —</option>']
+        .concat(projects.map(p =>
+          `<option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>${escapeHtml(p.name)}</option>`
+        )).join('');
+    }
+
+    function itemsHtml() {
+      if (insights.length === 0) return '<div class="empty">还没有心得 · 现在可以追记</div>';
+      return `<div class="items">${insights.map((it, i) => {
+        const proj = projects.find(p => p.id === it.projectId);
+        const pName = proj ? proj.name : '无项目';
+        return `<div class="item">
+          <span class="txt">${escapeHtml(it.text)}</span>
+          <span class="proj">${escapeHtml(pName)}</span>
+          <span class="pts">+${it.points}</span>
+          <button class="del" data-mact="mi-del" data-mi-idx="${i}" aria-label="删除这条心得">×</button>
+        </div>`;
+      }).join('')}</div>`;
+    }
+
+    function addFormHtml() {
+      const d = uiState.draft;
+      return uiState.addingMore
+        ? `<div class="add-form">
+             <textarea id="ft-mi-text" placeholder="追记一条心得… (纸上写的 / 脑子里的)" autofocus>${escapeHtml(d.text)}</textarea>
+             <div class="row2">
+               <input type="number" id="ft-mi-pts" min="1" max="100" step="1" value="${d.points}" aria-label="积分" />
+               <select id="ft-mi-proj">${projOptionsHtml(d.projectId)}</select>
+             </div>
+             <div class="row3">
+               <button class="cancel" data-mact="mi-cancel">取消</button>
+               <button class="save" data-mact="mi-save">记下</button>
+             </div>
+           </div>`
+        : `<button class="add-btn" data-mact="mi-add">+ 追记一条心得</button>`;
+    }
+
+    function renderBody() {
+      const totalPts = insights.reduce((s, i) => s + (Number(i.points) || 0), 0);
+      modal.innerHTML = `
+        <div class="ft-modal-card">
+          <div class="ft-modal-head">专注结束 · 填写完成</div>
+          <div class="ft-modal-body">
+            <div class="ft-session-summary">
+              <div><span style="color:var(--text-4)">时段</span> <b>${toTime(snap.startedAt)} – ${toTime(snap.endedAt)}</b></div>
+              <div><span style="color:var(--text-4)">时长</span> <b>${fmtHMS(snap.actualSec)}</b> (${mins} 分钟)</div>
+              <div><span style="color:var(--text-4)">开始时清晰度</span> <b>${snap.preClarity}</b></div>
+              ${snap.note ? `<div><span style="color:var(--text-4)">名称</span> <b>${escapeHtml(snap.note)}</b></div>` : ''}
+            </div>
+            <div class="ft-field">
+              <div class="label"><span>结束时 · 大脑清晰度</span><span class="val" id="ft-post-val">${uiState.postClarity}</span></div>
+              <input type="range" class="ft-slider" id="ft-post" min="0" max="100" step="1" value="${uiState.postClarity}" />
+            </div>
+            <div class="ft-field">
+              <div class="label"><span>挂到哪个项目</span></div>
+              <select id="ft-m-project">${projOptionsHtml(uiState.projectId)}</select>
+            </div>
+            <div class="ft-field">
+              <div class="label"><span>本次心得</span><span class="val">${insights.length} 条 · 共 +${totalPts}</span></div>
+              <div class="ft-insights" style="margin-top:6px">
+                ${itemsHtml()}
+                ${addFormHtml()}
+              </div>
+            </div>
+            <div class="ft-field">
+              <label style="display:flex;gap:8px;align-items:center;font-family:var(--mono);font-size:11.5px;color:var(--text-2);cursor:pointer">
+                <input type="checkbox" id="ft-m-entry" ${uiState.genEntry ? 'checked' : ''} />
+                <span>生成今日明细 entry（心得会作为独立 entry 写入）</span>
+              </label>
+            </div>
+            <div class="ft-actions">
+              <button class="ft-btn" data-mact="discard">丢弃</button>
+              <button class="ft-btn primary" data-mact="save">保存</button>
+            </div>
           </div>
         </div>
-      </div>
-    `;
-    modal.classList.add('open');
-    modal.querySelector('#ft-post').addEventListener('input', (e) => {
-      modal.querySelector('#ft-post-val').textContent = e.target.value;
-    });
-    modal.addEventListener('click', function onClick(ev) {
+      `;
+      // (re)bind live-value inputs after each innerHTML reset
+      const postInp = modal.querySelector('#ft-post');
+      if (postInp) {
+        postInp.addEventListener('input', (e) => {
+          uiState.postClarity = Number(e.target.value);
+          modal.querySelector('#ft-post-val').textContent = e.target.value;
+        });
+      }
+      const projSel = modal.querySelector('#ft-m-project');
+      if (projSel) projSel.addEventListener('change', (e) => { uiState.projectId = e.target.value; });
+      const gen = modal.querySelector('#ft-m-entry');
+      if (gen) gen.addEventListener('change', (e) => { uiState.genEntry = e.target.checked; });
+
+      // focus textarea when the add-form just appeared
+      if (uiState.addingMore) {
+        const ta = modal.querySelector('#ft-mi-text');
+        if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+      }
+    }
+
+    function saveDraftInsight() {
+      const text = (modal.querySelector('#ft-mi-text').value || '').trim();
+      const pts = Math.max(1, Math.round(Number(modal.querySelector('#ft-mi-pts').value) || 0));
+      const pid = modal.querySelector('#ft-mi-proj').value || null;
+      if (!text) { uiState.addingMore = false; renderBody(); return; }
+      insights.push({
+        id: 'i_m_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        text,
+        points: pts,
+        projectId: pid,
+        at: nowIso()
+      });
+      uiState.addingMore = false;
+      uiState.draft = { text: '', points: 30, projectId: uiState.projectId || '' };
+      renderBody();
+    }
+
+    function captureDraft() {
+      // keep typed text if user clicks something else before hitting "记下"
+      const t = modal.querySelector('#ft-mi-text');
+      const p = modal.querySelector('#ft-mi-pts');
+      const pr = modal.querySelector('#ft-mi-proj');
+      if (t)  uiState.draft.text = t.value;
+      if (p)  uiState.draft.points = Number(p.value) || 30;
+      if (pr) uiState.draft.projectId = pr.value || null;
+    }
+
+    function onClick(ev) {
       const b = ev.target.closest('[data-mact]');
       if (!b) return;
       const act = b.dataset.mact;
+      if (act === 'mi-add') {
+        captureDraft();
+        uiState.addingMore = true;
+        renderBody();
+        return;
+      }
+      if (act === 'mi-cancel') {
+        uiState.addingMore = false;
+        uiState.draft = { text: '', points: 30, projectId: uiState.projectId || '' };
+        renderBody();
+        return;
+      }
+      if (act === 'mi-save') {
+        saveDraftInsight();
+        return;
+      }
+      if (act === 'mi-del') {
+        const idx = Number(b.dataset.miIdx);
+        if (!Number.isNaN(idx) && idx >= 0 && idx < insights.length) {
+          insights.splice(idx, 1);
+          renderBody();
+        }
+        return;
+      }
       if (act === 'discard') {
         if (!confirm('丢弃这次专注记录？')) return;
         modal.classList.remove('open');
@@ -3586,14 +3695,28 @@ const FocusTimer = (function () {
         return;
       }
       if (act === 'save') {
-        const post = Number(modal.querySelector('#ft-post').value);
-        const pid = modal.querySelector('#ft-m-project').value || null;
-        const genEntry = modal.querySelector('#ft-m-entry').checked;
-        commitSession({ ...snap, projectId: pid, postClarity: post, genEntry });
+        // if user left the add-form open with text typed, capture it as an
+        // extra insight so nothing typed gets silently dropped
+        if (uiState.addingMore) {
+          const t = modal.querySelector('#ft-mi-text');
+          if (t && t.value.trim()) saveDraftInsight();
+          else uiState.addingMore = false;
+        }
+        commitSession({
+          ...snap,
+          insights, // final edited list — commitSession will generate entries from these
+          projectId: uiState.projectId || null,
+          postClarity: uiState.postClarity,
+          genEntry: uiState.genEntry
+        });
         modal.classList.remove('open');
         modal.removeEventListener('click', onClick);
       }
-    });
+    }
+
+    renderBody();
+    modal.classList.add('open');
+    modal.addEventListener('click', onClick);
   }
 
   function commitSession(s) {
