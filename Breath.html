@@ -508,7 +508,9 @@
     color: var(--text-4);
     cursor: pointer;
     border-radius: 50%;
-    transition: background 160ms ease, color 160ms ease, transform 120ms ease;
+    /* spring rotation for the +↔× transition on open/close */
+    transition: background 160ms ease, color 160ms ease,
+                transform 220ms cubic-bezier(0.3, 1.4, 0.6, 1);
   }
   .section-meta .meta-add-btn:hover {
     color: var(--pos-fg);
@@ -518,6 +520,21 @@
   .section-meta .meta-add-btn:focus-visible {
     outline: 2px solid var(--pos);
     outline-offset: 1px;
+  }
+  /* open state: "+" rotates 45° into a "×" + warm-neg color swap so the
+     second tap-to-close semantic is visually explicit. */
+  .section-meta .meta-add-btn.open {
+    transform: rotate(45deg);
+    color: var(--neg-fg);
+    background: var(--neg-bg);
+  }
+  .section-meta .meta-add-btn.open:hover {
+    color: var(--neg-fg);
+    background: var(--neg-bg);
+    opacity: 0.85;
+  }
+  .section-meta .meta-add-btn.open:active {
+    transform: rotate(45deg) scale(0.92);
   }
 
   .belowhero {
@@ -1898,13 +1915,16 @@
     border-radius: 3px;
   }
 
-  /* ——— manual entry add (form appears at top of #entries-list when open) ——— */
+  /* ——— manual entry add (form lives in a sibling container outside #entries-list
+         so it stays visible when the section is collapsed) ——— */
+  .entry-add-area:not(:empty) {
+    margin: 12px 0 6px;
+  }
   .entry-add-form {
     display: flex;
     flex-direction: column;
     gap: 9px;
     padding: 12px;
-    margin-bottom: 10px;
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 6px;
@@ -2195,6 +2215,7 @@ function render(data) {
   };
   const entriesCollapsed  = _readCollapsed('lifeflow_entries_collapsed');
   const projectsCollapsed = _readCollapsed('lifeflow_projects_collapsed');
+  const addEntryOpen      = !!(window.__ADD_ENTRY__ && window.__ADD_ENTRY__.open);
 
   // historical rank: % of past days strictly below today's points
   const history = Array.isArray(data.history_points) ? data.history_points : [];
@@ -2290,13 +2311,18 @@ function render(data) {
           <div class="section-title"><span class="chev-sec" aria-hidden="true">▾</span>今日明细</div>
           <div class="section-meta">
             <span>${today.entries.length} 条 · ${today.points} 分</span>
-            <button type="button" class="meta-add-btn"
-                    data-act="entry-add-open"
-                    aria-label="补录一条" title="补录一条">+</button>
+            <button type="button"
+                    class="meta-add-btn${addEntryOpen ? ' open' : ''}"
+                    data-act="entry-add-toggle"
+                    aria-label="${addEntryOpen ? '收起补录' : '补录一条'}"
+                    aria-expanded="${addEntryOpen ? 'true' : 'false'}"
+                    title="${addEntryOpen ? '点一下收起' : '补录一条'}">+</button>
           </div>
         </header>
+        <!-- The add-form lives OUTSIDE #entries-list so it's still visible when
+             the list is collapsed. Empty when closed, hence `:not(:empty)` in CSS. -->
+        <div class="entry-add-area">${renderEntryAddArea(projects)}</div>
         <div class="entries" id="entries-list">
-          ${renderEntryAddArea(projects)}
           ${today.entries.map((e, i) => ({ e, i })).reverse().map(({ e, i }) => renderEntry(e, projects, i)).join('')}
         </div>
       </section>
@@ -2745,16 +2771,26 @@ function bindEntryAdd() {
     const btn = ev.target.closest('[data-act]');
     if (!btn) return;
     const act = btn.dataset.act;
-    if (act === 'entry-add-open') {
+    if (act === 'entry-add-toggle') {
       // don't let this click bubble to the <header data-act="toggle-entries">
       // which would collapse the section instead of opening the form
       ev.stopPropagation();
-      window.__ADD_ENTRY__ = { open: true, draft: { task: '', time: defaultNowHHMM(), points: 30, pct: 0, projectId: '' } };
-      render(window.__DATA__);
-      setTimeout(() => {
-        const ta = document.querySelector('.entry-add-form .f-task');
-        if (ta) ta.focus();
-      }, 0);
+      const currentlyOpen = !!(window.__ADD_ENTRY__ && window.__ADD_ENTRY__.open);
+      if (currentlyOpen) {
+        // second click on "+" (now rotated to ×) closes the form
+        window.__ADD_ENTRY__ = { open: false };
+        render(window.__DATA__);
+      } else {
+        window.__ADD_ENTRY__ = {
+          open: true,
+          draft: { task: '', time: defaultNowHHMM(), points: 30, pct: 0, projectId: '' }
+        };
+        render(window.__DATA__);
+        setTimeout(() => {
+          const ta = document.querySelector('.entry-add-form .f-task');
+          if (ta) ta.focus();
+        }, 0);
+      }
       return;
     }
     if (act === 'entry-add-cancel') {
