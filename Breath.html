@@ -1867,6 +1867,111 @@
     box-shadow: inset 0 0 0 1px var(--line);
     border-radius: 3px;
   }
+
+  /* ——— manual entry add (in-line at top of #entries-list) ——— */
+  .entry-add-btn {
+    display: block;
+    width: 100%;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.01em;
+    color: var(--text-3);
+    text-align: center;
+    padding: 9px 12px;
+    background: transparent;
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
+  }
+  .entry-add-btn:hover {
+    color: var(--text);
+    border-color: var(--text-3);
+    background: var(--track-ghost);
+  }
+  .entry-add-form {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+  }
+  .entry-add-form .f-task {
+    all: unset;
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--text);
+    padding: 4px 0 6px;
+    border-bottom: 1px solid var(--line-2);
+  }
+  .entry-add-form .f-task::placeholder { color: var(--text-4); }
+  .entry-add-form .row {
+    display: flex;
+    gap: 8px;
+  }
+  .entry-add-form .f-label {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+    min-width: 0;
+  }
+  .entry-add-form .f-label > span {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .entry-add-form input[type="time"],
+  .entry-add-form input[type="number"],
+  .entry-add-form select {
+    all: unset;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+    padding: 5px 8px;
+    background: var(--track-ghost);
+    border-radius: 4px;
+    cursor: text;
+    font-variant-numeric: tabular-nums;
+  }
+  .entry-add-form select { cursor: pointer; font-family: var(--sans); }
+  .entry-add-form input:focus,
+  .entry-add-form select:focus,
+  .entry-add-form .f-task:focus {
+    outline: 2px solid var(--pos-bg);
+    outline-offset: 1px;
+  }
+  .entry-add-form .row-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    margin-top: 2px;
+  }
+  .entry-add-form .row-actions button {
+    all: unset;
+    cursor: pointer;
+    padding: 6px 14px;
+    font-family: var(--sans);
+    font-size: 12px;
+    border-radius: 4px;
+    transition: background 140ms ease, color 140ms ease, opacity 140ms ease;
+  }
+  .entry-add-form .cancel {
+    color: var(--text-3);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .entry-add-form .cancel:hover { color: var(--text); box-shadow: inset 0 0 0 1px var(--text-3); }
+  .entry-add-form .save {
+    background: var(--pos);
+    color: var(--surface);
+  }
+  .entry-add-form .save:hover { opacity: 0.88; }
   .entry .pts {
     font-family: var(--mono);
     font-weight: 500;
@@ -2177,6 +2282,7 @@ function render(data) {
           <div class="section-meta">${today.entries.length} 条 · ${today.points} 分</div>
         </header>
         <div class="entries" id="entries-list">
+          ${renderEntryAddArea(projects)}
           ${today.entries.map((e, i) => ({ e, i })).reverse().map(({ e, i }) => renderEntry(e, projects, i)).join('')}
         </div>
       </section>
@@ -2198,6 +2304,7 @@ function render(data) {
   bindEntriesToggle();
   bindProjectsToggle();
   bindEntryEdit();
+  bindEntryAdd();
   startFocusClock();
   return; // main.innerHTML already assigned above
 }
@@ -2499,6 +2606,162 @@ function bindProjectsToggle() {
   });
   head.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+  });
+}
+
+// ——— Manual entry add ———
+// A virtual "补录一条" button pinned to the top of #entries-list so the user
+// can log activity that didn't go through Focus Timer. Opens an inline form
+// that hydrates to a real entry + optional project.pct bump, then pushes via
+// SyncClient like any timer-generated entry.
+
+function defaultNowHHMM() {
+  const d = new Date();
+  return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+}
+
+function renderEntryAddArea(projects) {
+  const ui = window.__ADD_ENTRY__ || { open: false };
+  if (!ui.open) {
+    return `<button type="button" class="entry-add-btn" data-act="entry-add-open">+ 补录一条</button>`;
+  }
+  const d = ui.draft || { task: '', time: defaultNowHHMM(), points: 30, pct: 0, projectId: '' };
+  const projOpts = ['<option value="">— 无项目 —</option>']
+    .concat((projects || []).filter(p => p && p.visible !== false).map(p =>
+      `<option value="${p.id}" ${p.id === d.projectId ? 'selected' : ''}>${escapeHtml(p.name)}</option>`
+    )).join('');
+  return `
+    <div class="entry-add-form" role="group" aria-label="补录一条今日明细">
+      <input type="text" class="f-task" maxlength="140"
+             placeholder="做了什么？（按 Enter 保存）"
+             value="${escapeHtml(d.task)}" />
+      <div class="row">
+        <label class="f-label"><span>时间</span>
+          <input type="time" class="f-time" value="${d.time}" /></label>
+        <label class="f-label"><span>积分</span>
+          <input type="number" class="f-pts" min="0" step="1" value="${d.points}" /></label>
+        <label class="f-label"><span>项目增量%</span>
+          <input type="number" class="f-pct" min="0" step="0.1" value="${d.pct}" /></label>
+      </div>
+      <label class="f-label"><span>关联项目</span>
+        <select class="f-proj">${projOpts}</select></label>
+      <div class="row-actions">
+        <button type="button" class="cancel" data-act="entry-add-cancel">取消</button>
+        <button type="button" class="save"   data-act="entry-add-save">记下</button>
+      </div>
+    </div>
+  `;
+}
+
+function bindEntryAdd() {
+  const list = document.getElementById('entries-list');
+  if (!list || list.__entryAddBound) return;
+  list.__entryAddBound = true;
+
+  function snapshotDraft() {
+    const form = list.querySelector('.entry-add-form');
+    if (!form) return null;
+    return {
+      task:      (form.querySelector('.f-task').value || '').trim(),
+      time:      (form.querySelector('.f-time').value || '').trim() || defaultNowHHMM(),
+      points:    Math.max(0, Math.round(Number(form.querySelector('.f-pts').value) || 0)),
+      pct:       Math.max(0, Number(form.querySelector('.f-pct').value) || 0),
+      projectId: form.querySelector('.f-proj').value || ''
+    };
+  }
+
+  function saveNew() {
+    const data = window.__DATA__;
+    if (!data) return;
+    const d = snapshotDraft();
+    if (!d || !d.task) {
+      const ta = list.querySelector('.f-task');
+      if (ta) ta.focus();
+      return;
+    }
+    // midnight safety — if the tab has been open across the day boundary,
+    // the new entry still lands in today's bucket.
+    if (typeof ensureTodayFresh === 'function') ensureTodayFresh(data);
+    data.today = data.today || {};
+    data.today.entries = Array.isArray(data.today.entries) ? data.today.entries : [];
+
+    const entry = {
+      id: 'e_manual_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+      time: d.time,
+      task: d.task,
+      project_id: d.projectId || null,
+      project_delta_pct: d.pct,
+      points: d.points,
+      source: 'manual'
+    };
+    data.today.entries.push(entry);
+    data.today.points = data.today.entries.reduce((acc, e) => acc + (Number(e && e.points) || 0), 0);
+
+    // project.pct / today_delta_pct bump if attached
+    const touched = [];
+    if (entry.project_id && entry.project_delta_pct > 0) {
+      const proj = (data.projects || []).find(p => p && p.id === entry.project_id);
+      if (proj) {
+        proj.pct             = (Number(proj.pct)             || 0) + entry.project_delta_pct;
+        proj.today_delta_pct = (Number(proj.today_delta_pct) || 0) + entry.project_delta_pct;
+        touched.push(proj);
+      }
+    }
+
+    try { SyncClient.enqueue([], [entry], touched); SyncClient.push(); } catch (e) {}
+
+    window.__ADD_ENTRY__ = { open: false };
+    render(data);
+  }
+
+  list.addEventListener('click', (ev) => {
+    const btn = ev.target.closest('[data-act]');
+    if (!btn) return;
+    const act = btn.dataset.act;
+    if (act === 'entry-add-open') {
+      window.__ADD_ENTRY__ = { open: true, draft: { task: '', time: defaultNowHHMM(), points: 30, pct: 0, projectId: '' } };
+      render(window.__DATA__);
+      // focus task field after the re-render
+      setTimeout(() => {
+        const ta = document.querySelector('.entry-add-form .f-task');
+        if (ta) ta.focus();
+      }, 0);
+      return;
+    }
+    if (act === 'entry-add-cancel') {
+      window.__ADD_ENTRY__ = { open: false };
+      render(window.__DATA__);
+      return;
+    }
+    if (act === 'entry-add-save') {
+      saveNew();
+      return;
+    }
+  });
+
+  list.addEventListener('keydown', (ev) => {
+    if (!window.__ADD_ENTRY__ || !window.__ADD_ENTRY__.open) return;
+    const form = ev.target.closest('.entry-add-form');
+    if (!form) return;
+    if (ev.key === 'Escape') {
+      ev.preventDefault();
+      window.__ADD_ENTRY__ = { open: false };
+      render(window.__DATA__);
+      return;
+    }
+    if (ev.key === 'Enter' && ev.target.classList && ev.target.classList.contains('f-task')) {
+      ev.preventDefault();
+      saveNew();
+    }
+  });
+
+  // Persist in-progress typing so re-render (triggered by SyncClient events)
+  // doesn't wipe the user's draft.
+  list.addEventListener('input', (ev) => {
+    if (!window.__ADD_ENTRY__ || !window.__ADD_ENTRY__.open) return;
+    if (!ev.target.closest('.entry-add-form')) return;
+    const d = snapshotDraft();
+    if (d) window.__ADD_ENTRY__.draft = d;
   });
 }
 
