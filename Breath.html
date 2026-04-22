@@ -806,21 +806,26 @@
   .ft-fab.running .ft-fab-resize {
     display: flex;
     position: absolute;
-    right:  calc(var(--fab-size) * 0.06);
-    bottom: calc(var(--fab-size) * 0.06);
-    width:  clamp(16px, calc(var(--fab-size) * 0.14), 24px);
-    height: clamp(16px, calc(var(--fab-size) * 0.14), 24px);
+    /* anchor the grip inside the circle at ~45° from center (right+bottom 14%
+       puts it safely inside a border-radius:50% FAB at any size). */
+    right:  calc(var(--fab-size) * 0.14);
+    bottom: calc(var(--fab-size) * 0.14);
+    width:  clamp(16px, calc(var(--fab-size) * 0.15), 26px);
+    height: clamp(16px, calc(var(--fab-size) * 0.15), 26px);
     align-items: center;
     justify-content: center;
-    color: var(--text-4);
-    font-size: clamp(11px, calc(var(--fab-size) * 0.11), 16px);
+    color: var(--text-3);
+    font-size: clamp(12px, calc(var(--fab-size) * 0.12), 18px);
     line-height: 1;
-    opacity: 0.42;
+    opacity: 0.55;
     cursor: nwse-resize;
     touch-action: none;
     user-select: none;
     border-radius: 4px;
+    /* faint backing makes it readable on any tier color of the arc underneath */
+    background: var(--track-ghost);
     transition: opacity 160ms ease, color 160ms ease, background 160ms ease;
+    z-index: 2; /* above the svg ring which has pointer-events: none anyway */
   }
   .ft-fab.running .ft-fab-resize:hover { opacity: 1; color: var(--text-2); background: var(--track-ghost); }
   .ft-fab.resizing .ft-fab-resize { opacity: 1; color: var(--text); }
@@ -2966,10 +2971,22 @@ const FocusTimer = (function () {
     }
   }
 
-  // Inject the running-state DOM (ring + center + ctrl) into the FAB once.
-  // Subsequent renders reuse the existing nodes and mutate attributes only.
+  // Inject the running-state DOM (ring + center + ctrl + resize grip) into
+  // the FAB once. Subsequent renders reuse the existing nodes and only mutate
+  // attributes. If any required slot is missing (older build left an incomplete
+  // DOM behind while a session was live across an upgrade), we wipe + re-inject.
   function renderFabRunningDOM(fab) {
-    if (fab.querySelector('.ft-fab-ring')) return;
+    const hasAll =
+      fab.querySelector('.ft-fab-ring') &&
+      fab.querySelector('.ft-fab-center') &&
+      fab.querySelector('.ft-fab-ctrl') &&
+      fab.querySelector('.ft-fab-resize');
+    if (hasAll) return;
+    // partial / legacy DOM → remove every running-only slot so the re-inject
+    // below starts from a clean slate; idle pill content (.ft-fab-pill) is
+    // left alone.
+    fab.querySelectorAll('.ft-fab-ring, .ft-fab-center, .ft-fab-ctrl, .ft-fab-resize')
+       .forEach(n => n.remove());
     const r = 50;
     const C = 2 * Math.PI * r;
     const frag = document.createElement('div');
