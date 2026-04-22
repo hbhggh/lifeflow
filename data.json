@@ -1,6 +1,6 @@
 {
   "schema_version": "0.2",
-  "updated_at": "2026-04-21T17:54:45+09:00",
+  "updated_at": "2026-04-22T02:11:28.871Z",
   "user": {
     "name": "吴昊",
     "level": 3,
@@ -12,7 +12,7 @@
   },
   "today": {
     "date": "2026-04-21",
-    "points": 350,
+    "points": 578,
     "rank_pct": 92,
     "focus_sessions": [
       {
@@ -101,6 +101,23 @@
         "entry_id_linked": null,
         "note": "",
         "insights": []
+      },
+      {
+        "id": "s_202604220035",
+        "mode": "countdown",
+        "planned_sec": 7200,
+        "actual_sec": 5712,
+        "start_at": "2026-04-22T00:35:52.480Z",
+        "end_at": "2026-04-22T02:11:04.962Z",
+        "pre_clarity": 70,
+        "post_clarity": 90,
+        "project_id": "japanese",
+        "entry_ids": [
+          "e_202604220211"
+        ],
+        "entry_id_linked": "e_202604220211",
+        "note": "日语学习",
+        "insights": []
       }
     ],
     "entries": [
@@ -117,6 +134,15 @@
         "project_id": "ai_tools_flow",
         "project_delta_pct": 5,
         "points": 250
+      },
+      {
+        "id": "e_202604220211",
+        "time": "11:11",
+        "task": "日语学习",
+        "project_id": "japanese",
+        "project_delta_pct": 0,
+        "points": 228,
+        "source": "focus_timer"
       }
     ]
   },
