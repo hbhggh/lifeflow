@@ -692,16 +692,21 @@
     animation: pulse 2.4s ease-in-out infinite;
   }
   .ft-fab .ft-elapsed { font-variant-numeric: tabular-nums; font-weight: 500; }
-  /* ----- running state: 112×112 ring-progress FAB ----- */
+  /* ----- running state: ring-progress FAB (size driven by --fab-size) ----- */
   .ft-fab.running {
-    width: 112px;
-    height: 112px;
+    --fab-size: 112px;
+    width:  var(--fab-size);
+    height: var(--fab-size);
     padding: 0;
     border-radius: 50%;
     box-shadow: 0 12px 32px rgba(0,0,0,0.18);
     display: block;      /* stack ring / center / ctrl with absolute */
     position: fixed;     /* preserved from idle */
     overflow: visible;
+  }
+  .ft-fab.resizing {
+    transition: none !important;
+    cursor: nwse-resize;
   }
   .ft-fab.running:hover { transform: translateY(-1px); }
   .ft-fab .ft-fab-pill { display: inline-flex; align-items: center; gap: 8px; }
@@ -754,7 +759,8 @@
   }
   .ft-fab.running .ft-fab-center .time {
     font-family: var(--mono);
-    font-size: 22px;
+    /* scales with --fab-size: 112px → 22px, 160px → 32px, 220px (cap) → 44px */
+    font-size: clamp(18px, calc(var(--fab-size) * 0.2), 44px);
     font-weight: 500;
     color: var(--text);
     font-variant-numeric: tabular-nums;
@@ -763,9 +769,9 @@
   }
   .ft-fab.running .ft-fab-center .sub {
     font-family: var(--sans);
-    font-size: 11px;
+    font-size: clamp(11px, calc(var(--fab-size) * 0.098), 22px);
     color: var(--text-3);
-    max-width: 82px;
+    max-width: calc(var(--fab-size) * 0.74);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -776,7 +782,7 @@
     display: flex;
     position: absolute;
     left: 50%;
-    bottom: 14px;
+    bottom: calc(var(--fab-size) * 0.125);
     transform: translateX(-50%);
     gap: 10px;
     padding: 2px 10px;
@@ -789,12 +795,35 @@
     cursor: pointer;
     color: var(--text-2);
     font-family: var(--sans);
-    font-size: 13px;
+    font-size: clamp(13px, calc(var(--fab-size) * 0.115), 20px);
     line-height: 1;
     padding: 3px 5px;
     border-radius: 4px;
     transition: color .15s ease, background .15s ease;
   }
+  /* resize grip — only visible in running state */
+  .ft-fab .ft-fab-resize { display: none; }
+  .ft-fab.running .ft-fab-resize {
+    display: flex;
+    position: absolute;
+    right:  calc(var(--fab-size) * 0.06);
+    bottom: calc(var(--fab-size) * 0.06);
+    width:  clamp(16px, calc(var(--fab-size) * 0.14), 24px);
+    height: clamp(16px, calc(var(--fab-size) * 0.14), 24px);
+    align-items: center;
+    justify-content: center;
+    color: var(--text-4);
+    font-size: clamp(11px, calc(var(--fab-size) * 0.11), 16px);
+    line-height: 1;
+    opacity: 0.42;
+    cursor: nwse-resize;
+    touch-action: none;
+    user-select: none;
+    border-radius: 4px;
+    transition: opacity 160ms ease, color 160ms ease, background 160ms ease;
+  }
+  .ft-fab.running .ft-fab-resize:hover { opacity: 1; color: var(--text-2); background: var(--track-ghost); }
+  .ft-fab.resizing .ft-fab-resize { opacity: 1; color: var(--text); }
   .ft-fab.running .ft-fab-ctrl button:hover {
     color: var(--text);
     background: var(--track-ghost);
@@ -1793,6 +1822,51 @@
   .entry .desc .hook .arrow { color: var(--text-4); }
   .entry .desc .hook .pp { color: var(--pos-fg); font-weight: 500; }
   .entry .desc .hook .pp.zero { color: var(--text-4); font-weight: 400; }
+  /* ——— inline-editable entry fields (task / proj / pp) ——— */
+  .entry .desc .task,
+  .entry .desc .hook .proj,
+  .entry .desc .hook .pp {
+    cursor: pointer;
+    padding: 1px 4px;
+    margin: -1px -4px;
+    border-radius: 3px;
+    transition: background 140ms ease, color 140ms ease, box-shadow 140ms ease;
+  }
+  .entry .desc .task:hover,
+  .entry .desc .hook .proj:hover { background: var(--track-ghost); color: var(--text); }
+  .entry .desc .hook .pp:hover { background: var(--pos-bg); }
+  .entry .desc .task:focus-visible,
+  .entry .desc .hook .proj:focus-visible,
+  .entry .desc .hook .pp:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--track-ghost), 0 0 0 3px var(--text-3);
+  }
+  .entry .desc .task.editing,
+  .entry .desc .hook .proj.editing,
+  .entry .desc .hook .pp.editing {
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--line);
+    cursor: text;
+  }
+  .entry .desc .task.editing:hover,
+  .entry .desc .hook .proj.editing:hover,
+  .entry .desc .hook .pp.editing:hover { background: var(--surface); }
+  .entry .desc .task input {
+    all: unset; font: inherit; color: inherit;
+    min-width: 160px; max-width: 100%;
+  }
+  .entry .desc .hook .pp input {
+    all: unset; font: inherit; color: inherit;
+    width: 3.2em; text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .entry .desc .hook .proj select {
+    all: unset; font: inherit; color: inherit;
+    cursor: pointer; padding: 0 2px;
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--line);
+    border-radius: 3px;
+  }
   .entry .pts {
     font-family: var(--mono);
     font-weight: 500;
@@ -2121,7 +2195,7 @@ function render(data) {
   bindProjectToggles();
   bindEntriesToggle();
   bindProjectsToggle();
-  bindEntryPtsEdit();
+  bindEntryEdit();
   startFocusClock();
   return; // main.innerHTML already assigned above
 }
@@ -2426,87 +2500,191 @@ function bindProjectsToggle() {
   });
 }
 
-// Inline edit for entry.points — delegated on #entries-list to survive re-renders.
-function bindEntryPtsEdit() {
+// Inline edit for entry fields (task / project / delta_pct / points).
+// Event-delegated on #entries-list so the binding survives re-renders.
+// Each editable surface is a role=button with data-act="edit-*" + data-entry-idx.
+function bindEntryEdit() {
   const list = document.getElementById('entries-list');
-  if (!list || list.__ptsEditBound) return;
-  list.__ptsEditBound = true;
+  if (!list || list.__entryEditBound) return;
+  list.__entryEditBound = true;
 
-  function commit(idx, newVal) {
+  function ctxOf(el) {
     const data = window.__DATA__;
-    if (!data || !data.today || !Array.isArray(data.today.entries)) return;
+    if (!data || !data.today || !Array.isArray(data.today.entries)) return null;
+    const idx = Number(el.dataset.entryIdx);
     const entry = data.today.entries[idx];
-    if (!entry) return;
-    const v = Math.max(0, Math.round(Number(newVal) || 0));
-    if (v === Number(entry.points)) return; // no-op
-    entry.points = v;
-    // recompute today.points = Σ entries.points (mirror of Function-side logic)
-    data.today.points = data.today.entries.reduce((acc, e) => acc + (Number(e && e.points) || 0), 0);
-    // push the updated entry upstream (Function upserts by id OR (time, task))
-    try { SyncClient.enqueue([], [entry]); SyncClient.push(); } catch (e) {}
-    render(data);
+    if (!entry) return null;
+    return { data, idx, entry };
   }
 
-  function begin(pts) {
-    if (pts.classList.contains('editing')) return;
-    const idx = Number(pts.dataset.entryIdx);
-    const current = pts.textContent.replace(/[^\d.-]/g, '');
-    pts.classList.add('editing');
-    pts.innerHTML = `<input type="number" min="0" step="1" inputmode="numeric" value="${current}" />`;
-    const inp = pts.querySelector('input');
-    inp.focus();
-    inp.select();
-    let committed = false;
-    const done = (save) => {
-      if (committed) return;
-      committed = true;
-      if (save) commit(idx, inp.value);
-      else render(window.__DATA__); // rerender restores the pts text and classes cleanly
-    };
+  function pushEntry(entry) {
+    try { SyncClient.enqueue([], [entry]); SyncClient.push(); } catch (e) {}
+  }
+
+  function attachTextKeybinds(inp, done) {
     inp.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { e.preventDefault(); done(true); }
       else if (e.key === 'Escape') { e.preventDefault(); done(false); }
     });
     inp.addEventListener('blur', () => done(true));
-    // Don't let the number input's clicks bubble up and trigger `begin` again.
     inp.addEventListener('click', (e) => e.stopPropagation());
   }
 
+  function beginPts(el) {
+    const c = ctxOf(el); if (!c) return;
+    el.classList.add('editing');
+    el.innerHTML = `<input type="number" min="0" step="1" inputmode="numeric" value="${Number(c.entry.points) || 0}" />`;
+    const inp = el.querySelector('input');
+    inp.focus(); inp.select();
+    let committed = false;
+    const done = (save) => {
+      if (committed) return;
+      committed = true;
+      if (save) {
+        const v = Math.max(0, Math.round(Number(inp.value) || 0));
+        if (v !== Number(c.entry.points)) {
+          c.entry.points = v;
+          c.data.today.points = c.data.today.entries.reduce((acc, e) => acc + (Number(e && e.points) || 0), 0);
+          pushEntry(c.entry);
+        }
+      }
+      render(window.__DATA__);
+    };
+    attachTextKeybinds(inp, done);
+  }
+
+  function beginTask(el) {
+    const c = ctxOf(el); if (!c) return;
+    const current = c.entry.task || '';
+    el.classList.add('editing');
+    el.innerHTML = `<input type="text" maxlength="140" value="${escapeHtml(current)}" />`;
+    const inp = el.querySelector('input');
+    inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length);
+    let committed = false;
+    const done = (save) => {
+      if (committed) return;
+      committed = true;
+      if (save) {
+        const v = (inp.value || '').trim();
+        if (v && v !== c.entry.task) {
+          c.entry.task = v;
+          pushEntry(c.entry);
+        }
+      }
+      render(window.__DATA__);
+    };
+    attachTextKeybinds(inp, done);
+  }
+
+  function beginProject(el) {
+    const c = ctxOf(el); if (!c) return;
+    const projects = (c.data.projects || []).filter(p => p.visible !== false);
+    const current = c.entry.project_id || '';
+    const opts = ['<option value="">— 无项目 —</option>']
+      .concat(projects.map(p =>
+        `<option value="${p.id}" ${p.id === current ? 'selected' : ''}>${escapeHtml(p.name)}</option>`
+      )).join('');
+    el.classList.add('editing');
+    el.innerHTML = `<select>${opts}</select>`;
+    const sel = el.querySelector('select');
+    sel.focus();
+    let committed = false;
+    const done = (save) => {
+      if (committed) return;
+      committed = true;
+      if (save) {
+        const v = sel.value || null;
+        if (v !== (c.entry.project_id || null)) {
+          c.entry.project_id = v;
+          pushEntry(c.entry);
+        }
+      }
+      render(window.__DATA__);
+    };
+    sel.addEventListener('change', () => done(true));
+    sel.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); done(false); }
+    });
+    sel.addEventListener('blur', () => done(true));
+    sel.addEventListener('click', (e) => e.stopPropagation());
+  }
+
+  function beginPct(el) {
+    const c = ctxOf(el); if (!c) return;
+    const current = Number(c.entry.project_delta_pct || 0);
+    el.classList.add('editing');
+    // preserve the surrounding '+' and '%' so the visual weight stays
+    el.innerHTML = `+<input type="number" min="0" step="0.1" inputmode="decimal" value="${current}" />%`;
+    const inp = el.querySelector('input');
+    inp.focus(); inp.select();
+    let committed = false;
+    const done = (save) => {
+      if (committed) return;
+      committed = true;
+      if (save) {
+        const raw = Number(inp.value);
+        const v = Math.max(0, Number.isFinite(raw) ? raw : 0);
+        if (v !== Number(c.entry.project_delta_pct || 0)) {
+          c.entry.project_delta_pct = v;
+          pushEntry(c.entry);
+        }
+      }
+      render(window.__DATA__);
+    };
+    attachTextKeybinds(inp, done);
+  }
+
+  function dispatchBegin(el) {
+    if (!el || el.classList.contains('editing')) return;
+    switch (el.dataset.act) {
+      case 'edit-pts':     beginPts(el);     break;
+      case 'edit-task':    beginTask(el);    break;
+      case 'edit-project': beginProject(el); break;
+      case 'edit-pct':     beginPct(el);     break;
+    }
+  }
+
   list.addEventListener('click', (ev) => {
-    const pts = ev.target.closest('.pts[data-act="edit-pts"]');
-    if (!pts) return;
-    begin(pts);
+    const el = ev.target.closest('[data-act^="edit-"]');
+    if (!el) return;
+    dispatchBegin(el);
   });
   list.addEventListener('keydown', (ev) => {
     if (ev.key !== 'Enter' && ev.key !== ' ') return;
-    const pts = ev.target.closest('.pts[data-act="edit-pts"]');
-    if (!pts || pts.classList.contains('editing')) return;
-    if (ev.target !== pts) return; // inner input handles its own keys
+    const el = ev.target.closest('[data-act^="edit-"]');
+    if (!el) return;
+    if (ev.target !== el) return; // inner input/select handles its own keys
     ev.preventDefault();
-    begin(pts);
+    dispatchBegin(el);
   });
 }
 
 function renderEntry(e, projects, idx) {
   const p = projects.find(x => x.id === e.project_id);
-  const pname = p ? p.name : e.project_id;
+  const pname = p ? p.name : (e.project_id || '无项目');
   const color = p ? p.color : '#888';
-  const showDelta = e.project_delta_pct > 0;
-  const deltaStr = fmtPct(e.project_delta_pct);
-  // pts is a role=button that opens inline edit; data-entry-idx is the index
-  // into data.today.entries (not into the reversed render order).
+  const showDelta = Number(e.project_delta_pct) > 0;
+  const deltaStr = fmtPct(Number(e.project_delta_pct) || 0);
+  // All four editable surfaces carry data-act=edit-* + data-entry-idx; one
+  // delegated listener on #entries-list (bindEntryEdit) handles inline edit.
+  // data-entry-idx is the index into data.today.entries (not the reversed
+  // render order).
   return `
     <div class="entry" style="--c:${color}">
       <div class="t">${e.time}</div>
       <div class="desc">
-        ${escapeHtml(e.task)}
+        <span class="task" role="button" tabindex="0"
+              data-act="edit-task" data-entry-idx="${idx}"
+              title="点击编辑任务">${escapeHtml(e.task)}</span>
         <span class="hook">
           <span class="p-dot"></span>
-          <span>${escapeHtml(pname)}</span>
+          <span class="proj" role="button" tabindex="0"
+                data-act="edit-project" data-entry-idx="${idx}"
+                title="点击更改关联项目">${escapeHtml(pname)}</span>
           <span class="arrow">→</span>
-          ${showDelta
-            ? `<span class="pp">+${deltaStr}%</span>`
-            : `<span class="pp zero">+0%</span>`}
+          <span class="pp ${showDelta ? '' : 'zero'}" role="button" tabindex="0"
+                data-act="edit-pct" data-entry-idx="${idx}"
+                title="点击编辑贡献百分比">+${deltaStr}%</span>
         </span>
       </div>
       <div class="pts" role="button" tabindex="0"
@@ -2810,6 +2988,8 @@ const FocusTimer = (function () {
         <button type="button" data-act="fab-pause" aria-label="暂停" title="暂停">⏸</button>
         <button type="button" data-act="fab-finish" class="danger" aria-label="结束并填写" title="结束">⏹</button>
       </div>
+      <div class="ft-fab-resize" role="slider" tabindex="0"
+           aria-label="调整浮窗尺寸" title="拖动调整浮窗大小">⇲</div>
     `;
     while (frag.firstElementChild) fab.appendChild(frag.firstElementChild);
   }
@@ -3909,8 +4089,8 @@ const FocusTimer = (function () {
     let moved = false, pointerId = null;
 
     function onDown(ev) {
-      // don't hijack pointerdown on the running-state ctrl buttons
-      if (ev.target && ev.target.closest && ev.target.closest('[data-act]')) return;
+      // don't hijack pointerdown on the running-state ctrl buttons / resize grip
+      if (ev.target && ev.target.closest && ev.target.closest('[data-act], .ft-fab-resize')) return;
       if (pointerId !== null) return; // single active pointer
       try { fab.setPointerCapture(ev.pointerId); } catch (e) {}
       pointerId = ev.pointerId;
@@ -3964,14 +4144,98 @@ const FocusTimer = (function () {
     window.addEventListener('orientationchange', reclamp);
   }
 
+  // ----- FAB running-state size (user-resizable via corner grip) -----
+  // Size lives in the CSS var --fab-size on .ft-fab.running so text / ring /
+  // ctrl scale together via clamp() rules. Persists in localStorage.
+  const FAB_SIZE_KEY = 'lifeflow_fab_size_v1';
+  const FAB_SIZE_MIN = 88;
+  const FAB_SIZE_MAX = 220;
+  const FAB_SIZE_DEFAULT = 112;
+
+  function applyFabSize(fab, px) {
+    const clamped = Math.max(FAB_SIZE_MIN, Math.min(FAB_SIZE_MAX, Math.round(Number(px) || FAB_SIZE_DEFAULT)));
+    fab.style.setProperty('--fab-size', clamped + 'px');
+    return clamped;
+  }
+
+  function restoreFabSize(fab) {
+    let raw;
+    try { raw = localStorage.getItem(FAB_SIZE_KEY); } catch (e) { return; }
+    if (!raw) return;
+    const n = Number(raw);
+    if (!Number.isFinite(n)) return;
+    applyFabSize(fab, n);
+  }
+
+  function installFabResize(fab) {
+    let pointerId = null;
+    let startPx = FAB_SIZE_DEFAULT;
+    let startDiag = 0; // diagonal distance from center at pointerdown
+
+    function onDown(ev) {
+      // only react when the handle itself was hit
+      if (!ev.target || !ev.target.closest || !ev.target.closest('.ft-fab-resize')) return;
+      if (pointerId !== null) return;
+      ev.stopPropagation(); // never let drag see this pointerdown
+      pointerId = ev.pointerId;
+      try { fab.setPointerCapture(pointerId); } catch (e) {}
+      const rect = fab.getBoundingClientRect();
+      startPx = rect.width; // fab is square
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top  + rect.height / 2;
+      startDiag = Math.hypot(ev.clientX - cx, ev.clientY - cy);
+      fab.classList.add('resizing');
+    }
+    function onMove(ev) {
+      if (pointerId == null || ev.pointerId !== pointerId) return;
+      if (ev.cancelable) ev.preventDefault();
+      const rect = fab.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top  + rect.height / 2;
+      const diag = Math.hypot(ev.clientX - cx, ev.clientY - cy);
+      // 2× so near-corner pulls translate to full-diameter changes
+      const next = startPx + (diag - startDiag) * 2;
+      applyFabSize(fab, next);
+      // reclamp position in case new size pushes the FAB off-screen
+      if (fab.style.left && fab.style.top && typeof applyFabPos === 'function') {
+        const r = fab.getBoundingClientRect();
+        applyFabPos(fab, r.left, r.top);
+      }
+    }
+    function onUpOrCancel(ev) {
+      if (pointerId == null || ev.pointerId !== pointerId) return;
+      try { fab.releasePointerCapture(pointerId); } catch (e) {}
+      pointerId = null;
+      fab.classList.remove('resizing');
+      // persist
+      const cur = getComputedStyle(fab).getPropertyValue('--fab-size').trim();
+      const n = parseInt(cur, 10);
+      if (!Number.isNaN(n)) {
+        try { localStorage.setItem(FAB_SIZE_KEY, String(n)); } catch (e) {}
+      }
+      // squelch next synthetic click so release doesn't open the panel
+      fab._justDragged = true;
+      setTimeout(() => { fab._justDragged = false; }, 0);
+    }
+
+    // capture phase so drag's pointerdown listener doesn't fire first
+    fab.addEventListener('pointerdown',  onDown, true);
+    fab.addEventListener('pointermove',  onMove);
+    fab.addEventListener('pointerup',    onUpOrCancel);
+    fab.addEventListener('pointercancel', onUpOrCancel);
+    fab.addEventListener('lostpointercapture', onUpOrCancel);
+  }
+
   function init(d, c) {
     data = d; cfg = c;
     load();
     // restore live session if running
     const fab = document.getElementById('ft-fab');
-    // restore persisted FAB position (clamped to current viewport) before drag binds
+    // restore persisted FAB position + size (clamped) before interaction binds
     restoreFabPos(fab);
+    restoreFabSize(fab);
     installFabDrag(fab);
+    installFabResize(fab);
     fab.addEventListener('click', (ev) => {
       // a drag just ended — squelch the synthetic click that follows pointerup
       if (fab._justDragged) { ev.stopPropagation(); ev.preventDefault(); return; }
