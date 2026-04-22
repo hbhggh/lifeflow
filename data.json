@@ -1,6 +1,6 @@
 {
   "schema_version": "0.2",
-  "updated_at": "2026-04-22T11:10:00.000Z",
+  "updated_at": "2026-04-22T11:09:24.949740Z",
   "user": {
     "name": "吴昊",
     "level": 3,
@@ -40,10 +40,20 @@
         "pre_clarity": 57,
         "post_clarity": 70,
         "project_id": "ai_tools_flow",
-        "entry_ids": [],
-        "entry_id_linked": null,
+        "entry_ids": [
+          "e_202604220238_i1"
+        ],
+        "entry_id_linked": "e_202604220238_i1",
         "note": "兔兔",
-        "insights": []
+        "insights": [
+          {
+            "id": "i_mo9g19mn",
+            "text": "--6",
+            "points": 15,
+            "project_id": "ai_tools_flow",
+            "at": "2026-04-22T02:38:34.751Z"
+          }
+        ]
       },
       {
         "id": "s_202604220304",
@@ -65,7 +75,7 @@
       {
         "id": "e_20260422_0935",
         "time": "09:35",
-        "task": "🌌 日语学习 1h58min",
+        "task": "🌌 日語勉強 1h58min",
         "project_id": "japanese",
         "project_delta_pct": 0,
         "points": 50,
@@ -83,7 +93,7 @@
       {
         "id": "e_20260422_1949",
         "time": "19:49",
-        "task": "🚗 去拿停车证明",
+        "task": "🚗 去拿停车证明 1h",
         "project_id": null,
         "project_delta_pct": 0,
         "points": 50,
@@ -95,7 +105,109 @@
     "date": "2026-04-21",
     "points": 578
   },
-  "history_points": [85, 92, 110, 75, 140, 160, 95, 130, 108, 175, 145, 125, 98, 180, 210, 155, 120, 88, 165, 195, 142, 172, 135, 112, 225, 148, 105, 168, 188, 152, 115, 132, 178, 95, 205, 128, 158, 118, 142, 185, 175, 138, 102, 215, 165, 125, 148, 92, 182, 155, 135, 198, 145, 172, 118, 162, 128, 195, 105, 148, 168, 135, 112, 228, 155, 178, 122, 165, 148, 192, 115, 158, 138, 175, 165, 202, 128, 145, 185, 172, 155, 138, 172, 218, 128, 165, 148, 188, 155, 175, 168, 195, 158, 178, 142, 165, 185, 172, 205, 168, 578],
+  "history_points": [
+    85,
+    92,
+    110,
+    75,
+    140,
+    160,
+    95,
+    130,
+    108,
+    175,
+    145,
+    125,
+    98,
+    180,
+    210,
+    155,
+    120,
+    88,
+    165,
+    195,
+    142,
+    172,
+    135,
+    112,
+    225,
+    148,
+    105,
+    168,
+    188,
+    152,
+    115,
+    132,
+    178,
+    95,
+    205,
+    128,
+    158,
+    118,
+    142,
+    185,
+    175,
+    138,
+    102,
+    215,
+    165,
+    125,
+    148,
+    92,
+    182,
+    155,
+    135,
+    198,
+    145,
+    172,
+    118,
+    162,
+    128,
+    195,
+    105,
+    148,
+    168,
+    135,
+    112,
+    228,
+    155,
+    178,
+    122,
+    165,
+    148,
+    192,
+    115,
+    158,
+    138,
+    175,
+    165,
+    202,
+    128,
+    145,
+    185,
+    172,
+    155,
+    138,
+    172,
+    218,
+    128,
+    165,
+    148,
+    188,
+    155,
+    175,
+    168,
+    195,
+    158,
+    178,
+    142,
+    165,
+    185,
+    172,
+    205,
+    168,
+    578
+  ],
   "projects": [
     {
       "id": "appearance",
@@ -105,10 +217,30 @@
       "color": "#D4537E",
       "category": "lifestyle",
       "sub": [
-        {"id": "weight", "name": "减肥 142→120 斤", "pct": 0, "weight": 25},
-        {"id": "dress", "name": "穿着", "pct": 0, "weight": 25},
-        {"id": "speech", "name": "言谈", "pct": 0, "weight": 25},
-        {"id": "presence", "name": "性张力", "pct": 0, "weight": 25}
+        {
+          "id": "weight",
+          "name": "减肥 142→120 斤",
+          "pct": 0,
+          "weight": 25
+        },
+        {
+          "id": "dress",
+          "name": "穿着",
+          "pct": 0,
+          "weight": 25
+        },
+        {
+          "id": "speech",
+          "name": "言谈",
+          "pct": 0,
+          "weight": 25
+        },
+        {
+          "id": "presence",
+          "name": "性张力",
+          "pct": 0,
+          "weight": 25
+        }
       ]
     },
     {
@@ -119,10 +251,30 @@
       "color": "#378ADD",
       "category": "learning",
       "sub": [
-        {"id": "kana", "name": "50 音图", "pct": 0, "weight": 25},
-        {"id": "vocabulary", "name": "单词(N3→N1 2000+)", "pct": 0, "weight": 30},
-        {"id": "grammar", "name": "语法(N3→N2→N1)", "pct": 0, "weight": 25},
-        {"id": "speaking", "name": "听说·日常交流", "pct": 0, "weight": 20}
+        {
+          "id": "kana",
+          "name": "50 音图",
+          "pct": 0,
+          "weight": 25
+        },
+        {
+          "id": "vocabulary",
+          "name": "单词(N3→N1 2000+)",
+          "pct": 0,
+          "weight": 30
+        },
+        {
+          "id": "grammar",
+          "name": "语法(N3→N2→N1)",
+          "pct": 0,
+          "weight": 25
+        },
+        {
+          "id": "speaking",
+          "name": "听说·日常交流",
+          "pct": 0,
+          "weight": 20
+        }
       ]
     },
     {
@@ -133,8 +285,18 @@
       "color": "#1D9E75",
       "category": "research",
       "sub": [
-        {"id": "conference", "name": "会议论文 ×1", "pct": 5, "weight": 50},
-        {"id": "journal", "name": "期刊论文 ×1", "pct": 0, "weight": 50}
+        {
+          "id": "conference",
+          "name": "会议论文 ×1",
+          "pct": 5,
+          "weight": 50
+        },
+        {
+          "id": "journal",
+          "name": "期刊论文 ×1",
+          "pct": 0,
+          "weight": 50
+        }
       ]
     },
     {
@@ -145,10 +307,30 @@
       "color": "#7F77DD",
       "category": "learning",
       "sub": [
-        {"id": "mcp_stack", "name": "MCP 生态(Rube/Zotero/Superpower)", "pct": 8, "weight": 30},
-        {"id": "prompt_flow", "name": "Prompt & Flow 工程", "pct": 5, "weight": 30},
-        {"id": "tooling", "name": "工具链整合(Claude/GitHub/编辑器)", "pct": 3, "weight": 25},
-        {"id": "dissemin", "name": "沉淀与分享", "pct": 0, "weight": 15}
+        {
+          "id": "mcp_stack",
+          "name": "MCP 生态(Rube/Zotero/Superpower)",
+          "pct": 8,
+          "weight": 30
+        },
+        {
+          "id": "prompt_flow",
+          "name": "Prompt & Flow 工程",
+          "pct": 5,
+          "weight": 30
+        },
+        {
+          "id": "tooling",
+          "name": "工具鼌畴合(Claude/GitHub/编辑器)",
+          "pct": 3,
+          "weight": 25
+        },
+        {
+          "id": "dissemin",
+          "name": "沉淀与分享",
+          "pct": 0,
+          "weight": 15
+        }
       ]
     },
     {
