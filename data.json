@@ -1,6 +1,6 @@
 {
   "schema_version": "0.2",
-  "updated_at": "2026-04-22T11:09:24.949740Z",
+  "updated_at": "2026-04-23T01:02:08.821Z",
   "user": {
     "name": "吴昊",
     "level": 3,
@@ -11,99 +11,25 @@
     "streak_days": 4
   },
   "today": {
-    "date": "2026-04-22",
-    "points": 150,
+    "date": "2026-04-23",
+    "points": 30,
     "rank_pct": 92,
-    "focus_sessions": [
-      {
-        "id": "s_202604220229",
-        "mode": "countdown",
-        "planned_sec": 2700,
-        "actual_sec": 535,
-        "start_at": "2026-04-22T02:29:28.040Z",
-        "end_at": "2026-04-22T02:38:23.269Z",
-        "pre_clarity": 70,
-        "post_clarity": 70,
-        "project_id": null,
-        "entry_ids": [],
-        "entry_id_linked": null,
-        "note": "",
-        "insights": []
-      },
-      {
-        "id": "s_202604220238",
-        "mode": "countdown",
-        "planned_sec": 2700,
-        "actual_sec": 15,
-        "start_at": "2026-04-22T02:38:29.676Z",
-        "end_at": "2026-04-22T02:38:44.544Z",
-        "pre_clarity": 57,
-        "post_clarity": 70,
-        "project_id": "ai_tools_flow",
-        "entry_ids": [
-          "e_202604220238_i1"
-        ],
-        "entry_id_linked": "e_202604220238_i1",
-        "note": "兔兔",
-        "insights": [
-          {
-            "id": "i_mo9g19mn",
-            "text": "--6",
-            "points": 15,
-            "project_id": "ai_tools_flow",
-            "at": "2026-04-22T02:38:34.751Z"
-          }
-        ]
-      },
-      {
-        "id": "s_202604220304",
-        "mode": "countdown",
-        "planned_sec": 2700,
-        "actual_sec": 506,
-        "start_at": "2026-04-22T03:04:56.677Z",
-        "end_at": "2026-04-22T03:13:22.324Z",
-        "pre_clarity": 70,
-        "post_clarity": 70,
-        "project_id": null,
-        "entry_ids": [],
-        "entry_id_linked": null,
-        "note": "",
-        "insights": []
-      }
-    ],
+    "focus_sessions": [],
     "entries": [
       {
-        "id": "e_20260422_0935",
-        "time": "09:35",
-        "task": "🌌 日語勉強 1h58min",
-        "project_id": "japanese",
-        "project_delta_pct": 0,
-        "points": 50,
-        "source": "calendar_xp"
-      },
-      {
-        "id": "e_20260422_1758",
-        "time": "17:58",
-        "task": "🤖 CalFlow 架构讨论 1h58min",
-        "project_id": "ai_tools_flow",
-        "project_delta_pct": 0,
-        "points": 50,
-        "source": "calendar_xp"
-      },
-      {
-        "id": "e_20260422_1949",
-        "time": "19:49",
-        "task": "🚗 去拿停车证明 1h",
-        "project_id": null,
-        "project_delta_pct": 0,
-        "points": 50,
-        "source": "calendar_xp"
+        "id": "e_manual_1776906128461_wrw6",
+        "time": "09:15",
+        "task": "市疫所",
+        "project_id": "appearance",
+        "project_delta_pct": 1,
+        "points": 30,
+        "source": "manual"
       }
     ]
   },
   "yesterday": {
-    "date": "2026-04-21",
-    "points": 578
+    "date": "2026-04-22",
+    "points": 150
   },
   "history_points": [
     85,
@@ -206,14 +132,15 @@
     172,
     205,
     168,
-    578
+    578,
+    150
   ],
   "projects": [
     {
       "id": "appearance",
       "name": "💰 社交货币",
-      "pct": 0,
-      "today_delta_pct": 0,
+      "pct": 1,
+      "today_delta_pct": 1,
       "color": "#D4537E",
       "category": "lifestyle",
       "sub": [
