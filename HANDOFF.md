@@ -1,6 +1,6 @@
 # HANDOFF · LifeFlow → Claude Web
 
-给接手的 Claude 的完整上下文。读完这份 + `README.md` + 三个 HTML 文件前 200 行，就能独立维护。
+给接手的 Claude 的完整上下文。读完这份 + `README.md` + `Breath.html` 前 200 行，就能独立维护。
 
 ---
 
@@ -68,7 +68,7 @@
 4. **最近 7 天柱图**：含今天（最右），今天深色 `var(--text)`，前 6 天浅灰 `var(--track)`。柱上显示积分、柱下显示 M/D 日期。
 5. **今日明细倒序** — 最新 entry 在顶部。
 6. **Focus Bar 柱条高度 32px** — 曾 18px，加粗后不要退回。
-7. **暖纸色基调** — Breath.html 已定，不要改回 Editor 的冷中性。
+7. **暖纸色基调** — Breath.html 已定，是项目唯一主架构。
 8. **避免 AI slop**：不要加 emoji 装饰、渐变背景、玻璃拟态、左 border accent 卡片、SVG 画的插图。
 
 ---

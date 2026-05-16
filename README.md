@@ -4,13 +4,12 @@
 
 ## 架构
 
-**三文件静态前端 + 两份 JSON 数据源**，无后端、无构建步骤。
+**单一静态前端 + 两份 JSON 数据源**，无后端、无构建步骤。
 
 ```
 lifeflow/
-├── index.html      # 入口 · 两个视觉方向（Breath / Editor）的选择落地页
-├── Breath.html     # 主视图 · 暖纸色 · 日常使用 · 当前主力
-├── Editor.html     # 备选视图 · 冷中性 · 编辑器风
+├── index.html      # 根入口 · 自动跳转到 Breath.html
+├── Breath.html     # 主视图 · 暖纸色 · 日常使用 · 唯一信息架构
 ├── config.json     # 单一真相源 (SSOT) · 等级 / 积分规则 / 专注池 / Notion 路由
 ├── data.json       # L2 刷新 · 今日数据 / 昨日 / 历史积分 / 项目状态
 └── README.md
@@ -32,7 +31,7 @@ Claude (对话中) ──┬─→ 读 config.json (规则)
 
 - **config.json** = 配置。改动需要同步更新 `memory#12`。
 - **data.json** = 每天由 Claude 根据对话流水重算覆写。
-- **前端** = 纯渲染层。打开页面 → fetch `./data.json` + `./config.json` → 渲染。
+- **前端** = 纯渲染层。打开 `Breath.html` → fetch `./data.json` + `./config.json` → 渲染。
 
 ## 核心功能 (Breath.html)
 
